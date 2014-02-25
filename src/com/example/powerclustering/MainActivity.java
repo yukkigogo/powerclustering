@@ -11,6 +11,7 @@ import org.apache.http.message.BufferedHeader;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -69,13 +70,47 @@ public class MainActivity extends  FragmentActivity{
 		  settings.setCompassEnabled(true);
 		  settings.setZoomControlsEnabled(true);    	   	
 		  
-		  setData();
+		  setDataDisplayBus();
 	
 	}
 
 	
 	
 	
+
+	private void setDataDisplayBus() {
+		AssetManager assetManager = getAssets();
+		
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open("coordinates.csv")));
+			String str;
+			while((str = br.readLine()) !=null) {
+				Log.v("pc", str);
+				String[] strs = str.split(",");
+				LatLng position=null;
+				try { // parse latitude and longitude string to double
+					double lat = Double.parseDouble(strs[2]);
+					double lon = Double.parseDouble(strs[1]);
+					position = new LatLng(lat, lon);					
+				} catch (Exception e) {
+					Log.e("pc" , " lat lng problem");
+				}
+				BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.dot);
+				Marker marker = mMap.addMarker(new MarkerOptions().position(position)
+						.title(strs[0])
+						.icon(icon));
+				
+			}
+			
+			
+			
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
+	}
+
 
 	private void setData() {
 		
@@ -86,7 +121,6 @@ public class MainActivity extends  FragmentActivity{
 			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open("node2.csv")));
 			String str;
 			while((str = br.readLine()) !=null) {
-				str=br.readLine();
 				String[] strs = str.split(" ");
 				LatLng position=null;
 				try { // parse latitude and longitude string to double
