@@ -5,9 +5,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import org.apache.http.message.BufferedHeader;
 
+import com.example.powerclustering.controller.BusesEdgeInitialController;
+import com.example.powerclustering.model.Bus;
+import com.example.powerclustering.model.Edge;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -18,6 +23,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import android.os.Bundle;
 import android.app.Activity;
@@ -29,14 +35,34 @@ import android.view.MenuItem;
 
 public class MainActivity extends  FragmentActivity{
 	
+	//system variable
+	AssetManager assetManager;
+	
+	// for google map
     GoogleMap mMap;
 	boolean satellie = false;
+	
+	//lists for bus and edge
+	static final String BUSES_CSV = "coordinates.csv";
+	static final String EDGES_CSV ="edgesList.csv";
+	HashMap<String,Bus> buses;
+	ArrayList<Edge> edges;
     
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
+      //Initialization for system  
+       assetManager = getAssets();		
+
+       //make lists for buses and edges
+       BusesEdgeInitialController controller = new BusesEdgeInitialController();
+       buses = controller.getBusListFromCSV(BUSES_CSV, assetManager);
+	   edges = controller.getEdgesListFromCSV(EDGES_CSV, assetManager, buses);
+
+       
+       //set up the map
         setUpMapIfNeeded();
         	
     }
@@ -68,46 +94,49 @@ public class MainActivity extends  FragmentActivity{
 			.zoom((float) 6.2)
 			.build();
 		  mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-		  setDataDisplayBus();
-	
+
+		  plotBusesAndEdgees(buses, edges);
+		  
 	}
 
 	
 	
 	
 
-	private void setDataDisplayBus() {
-		AssetManager assetManager = getAssets();
+	private void plotBusesAndEdgees(HashMap<String, Bus> b, ArrayList<Edge> e) {
 		
-		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open("coordinates.csv")));
-			String str;
-			while((str = br.readLine()) !=null) {
-				Log.v("pc", str);
-				String[] strs = str.split(",");
-				LatLng position=null;
-				try { // parse latitude and longitude string to double
-					double lat = Double.parseDouble(strs[2]);
-					double lon = Double.parseDouble(strs[1]);
-					position = new LatLng(lat, lon);					
-				} catch (Exception e) {
-					Log.e("pc" , " lat lng problem");
-				}
-				BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.dot);
-				Marker marker = mMap.addMarker(new MarkerOptions().position(position)
-						.title(strs[0])
-						.icon(icon));
-				
-			}
+		//plot marker
+		for(Bus bus : b.values()){
+			BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.dot);
+			Marker marker = mMap.addMarker(new MarkerOptions().position(bus.getLatLng())
+					.title(bus.getName())
+					.icon(icon));
+		}	
+	
+		//plot polyline
+		for(Edge edge : e){
+			PolylineOptions options = new PolylineOptions();
+			options.add(edge.getStartBus().getLatLng());
+			options.add(edge.getEndBus().getLatLng());
+			options.color(0xcc00ffff);
+			options.width(5);
+			
+			mMap.addPolyline(options);
 			
 			
-			
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		
+		}
+	
 	}
+
+
+	
+
+
+
+			
+			
+			
+			
 
 
 	@Override
