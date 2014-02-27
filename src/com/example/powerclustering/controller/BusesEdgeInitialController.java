@@ -64,16 +64,15 @@ public class BusesEdgeInitialController {
 				if(start!=null && end!=null)
 					edges.add(new Edge(start, end));	
 				else if(start==null){
-					Log.e("pc","start : "+strs[0]);
+					//Log.e("pc","start : "+strs[0]);
 					count++;
 				}else if(end==null){
-					Log.e("pc", "end : "+strs[1]);
+					//Log.e("pc", "end : "+strs[1]);
 					count++;
 				}
 			}
 			Log.e("pc", "number of null : "+count);
 		}catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		
