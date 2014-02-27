@@ -1,6 +1,7 @@
 package com.example.powerclustering.controller;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -18,6 +19,9 @@ public class BusesEdgeInitialController {
 
 	public HashMap<String, Bus> getBusListFromCSV(String filename, AssetManager assetManager) {
 		HashMap<String, Bus> buses = new HashMap<String, Bus>();
+		
+		//missing Name
+		File file =  new File("missing");
 		
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(filename)));
@@ -52,15 +56,23 @@ public class BusesEdgeInitialController {
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(edgesCsv)));
 			String str;
+			int count =0;
 			while((str = br.readLine()) !=null) {
 				String[] strs = str.split(",");
-				/// maybe there are not matching???
 				Bus start = buses.get(strs[0]);
 				Bus end = buses.get(strs[1]);
-				edges.add(new Edge(start, end));	
-				Log.e("pc", start.getName() +" and "+ end.getName());
+				if(start!=null && end!=null)
+					edges.add(new Edge(start, end));	
+				else if(start==null){
+					Log.e("pc","start : "+strs[0]);
+					count++;
+				}else if(end==null){
+					Log.e("pc", "end : "+strs[1]);
+					count++;
+				}
 			}
-			}catch (IOException e) {
+			Log.e("pc", "number of null : "+count);
+		}catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}

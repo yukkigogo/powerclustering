@@ -25,13 +25,22 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import android.R.color;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.res.AssetManager;
+import android.graphics.Color;
+import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
 
 public class MainActivity extends  FragmentActivity{
 	
@@ -47,7 +56,13 @@ public class MainActivity extends  FragmentActivity{
 	static final String EDGES_CSV ="edgesList.csv";
 	HashMap<String,Bus> buses;
 	ArrayList<Edge> edges;
-    
+	
+	// For Navigation Drawer 
+	private DrawerLayout mDrawerLayout;
+	private ListView mDrawerListView;
+	private ActionBarDrawerToggle mDrawerToggle;
+	private String[] clsterTypes;
+	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,11 +79,34 @@ public class MainActivity extends  FragmentActivity{
        
        //set up the map
         setUpMapIfNeeded();
-        	
+        
+        //set up drawer
+        setUpDrawer();
     }
 
 
-    private void setUpMapIfNeeded() {
+    private void setUpDrawer() {
+    	
+    	
+    	
+    	//setup up the list
+    	clsterTypes = getResources().getStringArray(R.array.drawer_array);
+    	mDrawerListView = (ListView) findViewById(R.id.left_drawer);
+    	mDrawerListView.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, clsterTypes));
+    	mDrawerListView.setOnItemClickListener(new DrawerItemClickListener());
+    	
+    	mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);	
+    	mDrawerToggle = new ActionBarDrawerToggle(this, 
+    								mDrawerLayout, 
+    								R.drawable.ic_drawer, 
+    								R.string.drawer_open, 
+    								R.string.drawer_close);
+    	
+    	
+	}
+
+
+	private void setUpMapIfNeeded() {
         // Do a null check to confirm that we have not already instantiated the map.  
         if (mMap == null) {
             // Try to obtain the map from the SupportMapFragment.
@@ -118,12 +156,11 @@ public class MainActivity extends  FragmentActivity{
 			PolylineOptions options = new PolylineOptions();
 			options.add(edge.getStartBus().getLatLng());
 			options.add(edge.getEndBus().getLatLng());
-			options.color(0xcc00ffff);
-			options.width(5);
+			options.color(Color.CYAN);
+			options.geodesic(true);
+			options.width(2);
 			
 			mMap.addPolyline(options);
-			
-			
 		}
 	
 	}
@@ -165,5 +202,24 @@ public class MainActivity extends  FragmentActivity{
     }
     
     
+    /**
+     * helper class for drawer navigater 
+     *
+     *
+     *
+     *
+     *
+     *
+     */
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
+
+		@Override
+		public void onItemClick(AdapterView<?> parent, View view, int position,
+				long id) {
+			
+			Log.e("pc", "");
+		}
+    	
+    }
     
 }

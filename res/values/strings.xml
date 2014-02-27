@@ -6,4 +6,17 @@
     <string name="hello_world">Hello world!</string>
 
     <string name="changeview">change view</string>
+
+
+   <string-array name="drawer_array">
+        <item>Admittance 16</item>
+        <item>Admittance 37</item>
+        <item>Power Flow 11</item>
+        <item>Power Flow 20</item>
+    </string-array>
+
+   	<string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+    
+
 </resources>
