@@ -32,7 +32,13 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.PorterDuff.Mode;
+import android.graphics.PorterDuffColorFilter;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
@@ -43,6 +49,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 
 public class MainActivity extends  FragmentActivity{
@@ -63,7 +71,12 @@ public class MainActivity extends  FragmentActivity{
 	ArrayList<Edge> edges;
 	ArrayList<String> Ads;
 	ArrayList<String> PFs;
+	ArrayList<Marker> marker_list;
+	ArrayList<Marker> marker_list2;
 	
+	//RadioButton 
+	RadioGroup radioGroup;
+	RadioButton radioButton;
 	
 	// For Navigation Drawer 
 	private DrawerLayout mDrawerLayout;
@@ -94,19 +107,77 @@ public class MainActivity extends  FragmentActivity{
         //set up drawer lines 91 97
        // setUpDrawer();
         
+        
+        
        //read csv and plot 
         readClusterData();
         plotCluster();
+        
+        //set radio button
+        setRadios();
+        
     }
 
+	private void setRadios() {
+        radioGroup = (RadioGroup) findViewById(R.id.radio_cluster);
+        radioButton = (RadioButton) findViewById(radioGroup.getCheckedRadioButtonId());
+       radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+		
+		@Override
+		public void onCheckedChanged(RadioGroup group, int checkedId) {
+			radioButton = (RadioButton) findViewById(checkedId);
+			switch (checkedId) {
+			case R.id.radio_ad_16:
+				Toast.makeText(MainActivity.this, "AD 16 ", Toast.LENGTH_SHORT)
+				.show();
+				break;
+			case R.id.radio_ad_37:
+				Toast.makeText(MainActivity.this, "AD 37 ", Toast.LENGTH_SHORT)
+				.show();
+				break;
+			default:
+				break;
+			}
+			
+			Toast.makeText(MainActivity.this, "show the num! " + checkedId, Toast.LENGTH_SHORT)
+			.show();
+		}
+	});
+	}
+
 	private void plotCluster() {
-		for(Bus b : buses.values()){
-			CircleOptions option = new CircleOptions();
-			option.center(b.getLatLng())
-			.radius(20000)
-			.strokeWidth(0)
-			.fillColor(b.getCirleColour());
-			mMap.addCircle(option);
+		marker_list2 = new ArrayList<Marker>();
+		//delete all marker on the map
+//		for(Marker m: marker_list){
+//			m.remove();
+//		}
+		marker_list.clear();
+		
+		for(Bus bus : buses.values()){			
+			int px = getResources().getDimensionPixelSize(R.dimen.map_dot_marker_size);
+			Bitmap mDotMarkerBitmap = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888);
+			Canvas canvas = new Canvas(mDotMarkerBitmap);
+			Drawable shape = getResources().getDrawable(R.drawable.marker_deb);
+			shape.setBounds(0, 0, mDotMarkerBitmap.getWidth(), mDotMarkerBitmap.getHeight());
+			shape.setColorFilter(new PorterDuffColorFilter
+					(bus.getCirleColour(), Mode.MULTIPLY));
+			shape.draw(canvas);
+			
+			Marker marker	= mMap.addMarker(new MarkerOptions()
+						.position(bus.getLatLng())
+						.snippet("Cluster :" +bus.getClusterNum())
+						.title(bus.getName())
+						.icon(BitmapDescriptorFactory.fromBitmap(mDotMarkerBitmap)));
+			
+				marker_list2.add(marker);
+			
+			
+//			CircleOptions option = new CircleOptions();
+//			option.center(b.getLatLng())
+//			.radius(2000)
+//			.strokeWidth(0)
+//			.fillColor(b.getCirleColour());
+//			mMap.addCircle(option);
 		}
 
 		
@@ -120,7 +191,7 @@ public class MainActivity extends  FragmentActivity{
 			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open("colour20.csv")));
 			String str;
 			while ((str = br.readLine()) !=null) {
-				String s = "66"+str;
+				String s = "77"+str;
 				Log.w("pc", s);
 				colours.add(Integer.parseInt(s,16));
 			}
@@ -137,9 +208,13 @@ public class MainActivity extends  FragmentActivity{
 			while ((str = br.readLine()) !=null) {
 				String[] s = str.split(",");
 				String name = PFs.get(Integer.parseInt(s[0]));
-				int col = colours.get(Integer.parseInt(s[1]));
+				int cluster_num = Integer.parseInt(s[1]);
+				int col = colours.get(cluster_num);
 				Bus b = buses.get(name);
-				if(b!=null) b.setCircleOptions(col);
+				if(b!=null){
+					b.setCircleOptions(col);
+					b.setClusterNum(cluster_num);
+				}
 			}
 			
 		}catch (IOException e) {
@@ -227,13 +302,14 @@ public class MainActivity extends  FragmentActivity{
 	
 
 	private void plotBusesAndEdgees(HashMap<String, Bus> b, ArrayList<Edge> e) {
-		
+		marker_list = new  ArrayList<Marker>();
 		//plot marker
 		for(Bus bus : b.values()){
 			BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.dot);
 			Marker marker = mMap.addMarker(new MarkerOptions().position(bus.getLatLng())
 					.title(bus.getName())
 					.icon(icon));
+			marker_list.add(marker);
 		}	
 	
 		//plot polyline

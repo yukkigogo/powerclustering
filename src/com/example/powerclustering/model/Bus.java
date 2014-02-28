@@ -2,12 +2,14 @@ package com.example.powerclustering.model;
 
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 
 public class Bus {
 	
 	private LatLng latlng;
 	private String name;
 	private int colour;
+	private int cluster_num;
 	private CircleOptions circleoption;
 
 	
@@ -15,6 +17,7 @@ public class Bus {
 		latlng = new LatLng(lat, lng);
 		this.name=name;	
 		circleoption = new CircleOptions();
+		
 	}
 	
 	public LatLng getLatLng(){return this.latlng;}
@@ -34,5 +37,7 @@ public class Bus {
 	public int getCirleColour(){ return this.colour; }
 	public CircleOptions getCircleOptions(){ return this.circleoption;}
 	
+	public void setClusterNum(int n){ this.cluster_num=n; }
+	public int getClusterNum(){return this.cluster_num;}
 	
 }
