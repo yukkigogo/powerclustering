@@ -43,6 +43,7 @@ import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -74,6 +75,9 @@ public class MainActivity extends  FragmentActivity{
 	ArrayList<Marker> marker_list;
 	ArrayList<Marker> marker_list2;
 	
+	//Cluster Data 4 versions
+	ArrayList<HashMap<String, Pair<Integer, Integer>>> clusterData;
+	
 	//RadioButton 
 	RadioGroup radioGroup;
 	RadioButton radioButton;
@@ -103,6 +107,7 @@ public class MainActivity extends  FragmentActivity{
 	   
        //set up the map
         setUpMapIfNeeded();
+  	  	plotBusesAndEdgees(buses, edges);
         
         //set up drawer lines 91 97
        // setUpDrawer();
@@ -111,7 +116,8 @@ public class MainActivity extends  FragmentActivity{
         
        //read csv and plot 
         readClusterData();
-        plotCluster();
+        //plot CL_AD_16
+        plotCluster(clusterData.get(0));
         
         //set radio button
         setRadios();
@@ -128,32 +134,68 @@ public class MainActivity extends  FragmentActivity{
 			radioButton = (RadioButton) findViewById(checkedId);
 			switch (checkedId) {
 			case R.id.radio_ad_16:
-				Toast.makeText(MainActivity.this, "AD 16 ", Toast.LENGTH_SHORT)
-				.show();
+				
+				plotCluster(clusterData.get(0));
 				break;
+
 			case R.id.radio_ad_37:
-				Toast.makeText(MainActivity.this, "AD 37 ", Toast.LENGTH_SHORT)
-				.show();
+				
+				plotCluster(clusterData.get(1));
 				break;
+
+			case R.id.radio_pf_11:
+				
+				plotCluster(clusterData.get(2));
+				break;
+
+			case R.id.radio_pf_20:
+				
+				plotCluster(clusterData.get(3));
+				break;
+				
+				
 			default:
 				break;
 			}
 			
-			Toast.makeText(MainActivity.this, "show the num! " + checkedId, Toast.LENGTH_SHORT)
-			.show();
+			
 		}
 	});
 	}
 
-	private void plotCluster() {
-		marker_list2 = new ArrayList<Marker>();
-		//delete all marker on the map
+	private void plotCluster(HashMap<String, Pair<Integer,Integer>> list) {
+		
+//delete all marker on the map
 //		for(Marker m: marker_list){
 //			m.remove();
 //		}
-		marker_list.clear();
+//marker_list.clear();
+		
+//		for(String s: list.keySet()){
+//			// pair <cluster_num,colour>
+//			Bus b = buses.get(s);			
+//			Log.e("pc", "should be cluster num "+list.get(s).first);
+//			if(b!=null){
+//				b.setCircleColour(list.get(s).second);
+//				b.setClusterNum(list.get(s).first);
+//			}
+//		}
+		
+		if(marker_list2==null) marker_list2 = new ArrayList<Marker>();
+		else for(Marker mk :marker_list2) mk.remove(); 
 		
 		for(Bus bus : buses.values()){			
+			
+			if(list.containsKey(bus.getName())){
+				bus.setCircleColour(list.get(bus.getName()).second);
+				bus.setClusterNum(list.get(bus.getName()).first);
+				
+			}else{
+				bus.setCircleColour(0x00ffffff);
+				bus.setClusterNum(0);
+			}
+			
+			
 			int px = getResources().getDimensionPixelSize(R.dimen.map_dot_marker_size);
 			Bitmap mDotMarkerBitmap = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888);
 			Canvas canvas = new Canvas(mDotMarkerBitmap);
@@ -185,41 +227,81 @@ public class MainActivity extends  FragmentActivity{
 
 	private void readClusterData() {
 		// make colour list
-		ArrayList<Integer> colours = new ArrayList<Integer>();
-		colours.add(0);
-		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open("colour20.csv")));
+		clusterData = 	new ArrayList<HashMap<String, Pair<Integer, Integer>>>();	
+		
+
+		for(int i=0;i<4;i++){			
+			HashMap<String,Pair<Integer, Integer>> list = new HashMap<String, Pair<Integer,Integer>>();
+			ArrayList<Integer> colours = new ArrayList<Integer>();
+			colours.add(0);
+			String colourlist="";
+			String fileList="";
+			switch (i){
+			case 0:
+				colourlist="colour16.csv";
+				fileList ="CL_AD_16.csv";
+				break;
+
+			case 1:
+				colourlist="colour37.csv";
+				fileList ="CL_AD_37.csv";
+				break;
+
+			case 2:
+				colourlist="colour11.csv";
+				fileList ="CL_PF_11.csv";
+				break;
+
+			case 3:
+				colourlist="colour20.csv";
+				fileList ="CL_PF_20.csv";
+				break;
+			
+			}		
+			
+			try {			
+			
+			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(colourlist)));
 			String str;
 			while ((str = br.readLine()) !=null) {
 				String s = "77"+str;
-				Log.w("pc", s);
+				//Log.w("pc", s);
 				colours.add(Integer.parseInt(s,16));
 			}
 			Log.e("pc", "size? "+ colours.size());
 		} catch (Exception e) {
 			String s = e.getMessage();
-			Log.e("pc", "we got a problem "+s );
+			Log.e("pc", "we got a problem : "+s );
 		}
-		
-		
-		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open("CL_PF_20.csv")));
+			
+		try {			
+			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(fileList)));
 			String str;
 			while ((str = br.readLine()) !=null) {
 				String[] s = str.split(",");
-				String name = PFs.get(Integer.parseInt(s[0]));
+				String name;
+				
+				if(i==2 || i==3) name = PFs.get(Integer.parseInt(s[0]));
+				else name = Ads.get(Integer.parseInt(s[0]));
+				
 				int cluster_num = Integer.parseInt(s[1]);
 				int col = colours.get(cluster_num);
-				Bus b = buses.get(name);
-				if(b!=null){
-					b.setCircleOptions(col);
-					b.setClusterNum(cluster_num);
-				}
+				
+				Pair<Integer, Integer> p = new Pair<Integer, Integer>(cluster_num, col);
+ 				list.put(name, p);
+				
 			}
 			
 		}catch (IOException e) {
-				e.printStackTrace();
+			String s = e.getMessage();
+			Log.e("pc", s);
 		}
+		
+		clusterData.add(list);
+		//colours.clear();
+		//list.clear();
+	}
+		
 	}
 
 	@Override
@@ -237,33 +319,33 @@ public class MainActivity extends  FragmentActivity{
 	
 	
 
-    private void setUpDrawer() {
-    	//setup up the list
-    	clsterTypes = getResources().getStringArray(R.array.drawer_array);
-    	mDrawerListView = (ListView) findViewById(R.id.left_drawer);
-    	mDrawerListView.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, clsterTypes));
-    	mDrawerListView.setOnItemClickListener(new DrawerItemClickListener());
-    	
-    	mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);	
-    	mDrawerToggle = new ActionBarDrawerToggle(this, 
-    								mDrawerLayout, 
-    								R.drawable.ic_drawer, 
-    								R.string.drawer_open, 
-    								R.string.drawer_close){
-      	  
-        	@Override
-        	public void onDrawerClosed(View drawerView) { }
-        	  
-        	@Override
-        	public void onDrawerOpened(View drawerView) {  }
-        	  
-          };;
-    	
-    	mDrawerLayout.setDrawerListener(mDrawerToggle);
-    	
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-        getActionBar().setHomeButtonEnabled(true);
-	}
+//    private void setUpDrawer() {
+//    	//setup up the list
+//    	clsterTypes = getResources().getStringArray(R.array.drawer_array);
+//    	mDrawerListView = (ListView) findViewById(R.id.left_drawer);
+//    	mDrawerListView.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, clsterTypes));
+//    	mDrawerListView.setOnItemClickListener(new DrawerItemClickListener());
+//    	
+//    	mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);	
+//    	mDrawerToggle = new ActionBarDrawerToggle(this, 
+//    								mDrawerLayout, 
+//    								R.drawable.ic_drawer, 
+//    								R.string.drawer_open, 
+//    								R.string.drawer_close){
+//      	  
+//        	@Override
+//        	public void onDrawerClosed(View drawerView) { }
+//        	  
+//        	@Override
+//        	public void onDrawerOpened(View drawerView) {  }
+//        	  
+//          };;
+//    	
+//    	mDrawerLayout.setDrawerListener(mDrawerToggle);
+//    	
+//        getActionBar().setDisplayHomeAsUpEnabled(true);
+//        getActionBar().setHomeButtonEnabled(true);
+//	}
 
 
 	private void setUpMapIfNeeded() {
@@ -293,7 +375,7 @@ public class MainActivity extends  FragmentActivity{
 			.build();
 		  mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
-		  plotBusesAndEdgees(buses, edges);
+	
 		  
 	}
 
@@ -379,10 +461,10 @@ public class MainActivity extends  FragmentActivity{
 		private void selectItem(int position) {
 			
 			Log.e("pc", "position num : " + position);
+			
 			mDrawerLayout.closeDrawer(mDrawerListView);
 						
 		}
-    	
 	
     }
     

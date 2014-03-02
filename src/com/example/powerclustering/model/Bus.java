@@ -16,7 +16,7 @@ public class Bus {
 	public Bus(double lat, double lng, String name) {
 		latlng = new LatLng(lat, lng);
 		this.name=name;	
-		circleoption = new CircleOptions();
+		//circleoption = new CircleOptions();
 		
 	}
 	
@@ -27,7 +27,7 @@ public class Bus {
 		this.colour=num;
 	}
 	
-	public void setCircleOptions(int colour){
+	public void setCircleColour(int colour){
 		this.colour=colour;
 		//circleoption.center(latlng);
 		//circleoption.radius(2000);
@@ -35,7 +35,7 @@ public class Bus {
 	}
 	
 	public int getCirleColour(){ return this.colour; }
-	public CircleOptions getCircleOptions(){ return this.circleoption;}
+	//public CircleOptions getCircleOptions(){ return this.circleoption;}
 	
 	public void setClusterNum(int n){ this.cluster_num=n; }
 	public int getClusterNum(){return this.cluster_num;}
