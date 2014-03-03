@@ -77,6 +77,8 @@ public class MainActivity extends  FragmentActivity{
 	
 	//Cluster Data 4 versions
 	ArrayList<HashMap<String, Pair<Integer, Integer>>> clusterData;
+	ArrayList<BitmapDescriptor> icons;
+
 	
 	//RadioButton 
 	RadioGroup radioGroup;
@@ -116,8 +118,13 @@ public class MainActivity extends  FragmentActivity{
         
        //read csv and plot 
         readClusterData();
+        
+        ///// make an array for icons
+        Just4Colours just4Colours = new Just4Colours();
+        icons = just4Colours.getIcons();
+        
         //plot CL_AD_16
-        plotCluster(clusterData.get(0));
+        plotCluster(clusterData.get(2));
         
         //set radio button
         setRadios();
@@ -184,6 +191,7 @@ public class MainActivity extends  FragmentActivity{
 		if(marker_list2==null) marker_list2 = new ArrayList<Marker>();
 		else for(Marker mk :marker_list2) mk.remove(); 
 		
+
 		for(Bus bus : buses.values()){			
 			
 			if(list.containsKey(bus.getName())){
@@ -191,27 +199,37 @@ public class MainActivity extends  FragmentActivity{
 				bus.setClusterNum(list.get(bus.getName()).first);
 				
 			}else{
-				bus.setCircleColour(0x00ffffff);
+				//bus.setCircleColour(0x00ffffff);
 				bus.setClusterNum(0);
 			}
 			
 			
-			int px = getResources().getDimensionPixelSize(R.dimen.map_dot_marker_size);
-			Bitmap mDotMarkerBitmap = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888);
-			Canvas canvas = new Canvas(mDotMarkerBitmap);
-			Drawable shape = getResources().getDrawable(R.drawable.marker_deb);
-			shape.setBounds(0, 0, mDotMarkerBitmap.getWidth(), mDotMarkerBitmap.getHeight());
-			shape.setColorFilter(new PorterDuffColorFilter
-					(bus.getCirleColour(), Mode.MULTIPLY));
-			shape.draw(canvas);
+//			int px = getResources().getDimensionPixelSize(R.dimen.map_dot_marker_size);
+//			Bitmap mDotMarkerBitmap = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888);
+//			Canvas canvas = new Canvas(mDotMarkerBitmap);
+//			Drawable shape = getResources().getDrawable(R.drawable.marker_deb);
+//			shape.setBounds(0, 0, mDotMarkerBitmap.getWidth(), mDotMarkerBitmap.getHeight());
+//			shape.setColorFilter(new PorterDuffColorFilter
+//					(bus.getCirleColour(), Mode.MULTIPLY));
+//			shape.draw(canvas);
+//			
+			 
+			//BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.test_icon);
+
+			if(bus.getClusterNum()==0){
+				
+			}else{
 			
 			Marker marker	= mMap.addMarker(new MarkerOptions()
 						.position(bus.getLatLng())
 						.snippet("Cluster :" +bus.getClusterNum())
 						.title(bus.getName())
-						.icon(BitmapDescriptorFactory.fromBitmap(mDotMarkerBitmap)));
+						.icon(icons.get(bus.getClusterNum())));
+//						.icon(BitmapDescriptorFactory.fromBitmap(mDotMarkerBitmap)));
+			marker_list2.add(marker);
+
 			
-				marker_list2.add(marker);
+			}
 			
 			
 //			CircleOptions option = new CircleOptions();
@@ -386,8 +404,9 @@ public class MainActivity extends  FragmentActivity{
 	private void plotBusesAndEdgees(HashMap<String, Bus> b, ArrayList<Edge> e) {
 		marker_list = new  ArrayList<Marker>();
 		//plot marker
+		BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.dot);
 		for(Bus bus : b.values()){
-			BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.dot);
+			
 			Marker marker = mMap.addMarker(new MarkerOptions().position(bus.getLatLng())
 					.title(bus.getName())
 					.icon(icon));
