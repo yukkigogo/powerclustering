@@ -25,6 +25,7 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import android.R.color;
@@ -75,8 +76,8 @@ public class MainActivity extends  FragmentActivity{
 	static final String PFs_CSV = "NodeIDsPF.csv";
 	HashMap<String,Bus> buses;
 	ArrayList<Edge> edges;
-	ArrayList<String> Ads;
-	ArrayList<String> PFs;
+	ArrayList<String> Ads; // index-Name for data
+	ArrayList<String> PFs; // index-Name for data
 	ArrayList<Marker> bus_edge_marker_list;
 	ArrayList<ArrayList<Marker>> marker_list2;
 	
@@ -496,6 +497,34 @@ public class MainActivity extends  FragmentActivity{
 			
 			mMap.addPolyline(options);
 		}
+	
+		//// test for cluster 3
+		
+		try {
+			BufferedReader br = new BufferedReader(
+					new InputStreamReader(assetManager.open("filename.csv")));
+			String str;
+			PolygonOptions options = new PolygonOptions();
+			
+			while((str=br.readLine())!=null){
+				String[] strs = str.split(",");
+				double lng = Double.parseDouble(strs[0]);
+				double lat = Double.parseDouble(strs[1]);
+				options.add(new LatLng(lng, lat));
+			}
+			options.fillColor(0x44ff0000);
+			options.strokeWidth(0);
+			mMap.addPolygon(options);
+			
+		} catch (Exception e2) {
+			String str = e2.getMessage();
+			Log.e("pc",str);
+		}
+		
+		
+		
+		////////
+	
 	
 	}
 
