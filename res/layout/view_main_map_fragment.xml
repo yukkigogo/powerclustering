@@ -24,24 +24,50 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 	        <RadioButton
-	          android:id="@+id/radio_pf_11"
+	          android:id="@+id/radio_case1"
 	          android:textColor="@color/white"
 	          android:checked="true"
-	          android:text="Power Flow 11 "/>
+	          android:text="case1 39 "/>
 	        <RadioButton
-	          android:id="@+id/radio_pf_20"
+	          android:id="@+id/radio_case2"
 	          android:textColor="@color/white"
-	          android:text="Power Flow 20 "/>
+	          android:text="case2 34 "/>
 	      
 	        <RadioButton
-	          android:id="@+id/radio_ad_16"
+	          android:id="@+id/radio_case3"
 	          android:textColor="@color/white"	          
-	          android:text="Admittance 16 "/>
+	          android:text="case3 37 "/>
 	        <RadioButton
-	          android:id="@+id/radio_ad_37"
+	          android:id="@+id/radio_case4"
 	          android:textColor="@color/white"
-	          android:text="Admittance 37 "/>
-        </RadioGroup> 
+	          android:text="case4 33 "/>
+	        <RadioButton
+	          android:id="@+id/radio_case5"
+	          android:textColor="@color/white"
+	          android:text="case5 32 "/>
+	        <RadioButton
+	          android:id="@+id/radio_case6"
+	          android:textColor="@color/white"
+	          android:text="case6 34 "/>
+	        <RadioButton
+	          android:id="@+id/radio_case7"
+	          android:textColor="@color/white"
+	          android:text="case7 34 "/>
+	        <RadioButton
+	          android:id="@+id/radio_case8"
+	          android:textColor="@color/white"
+	          android:text="case8 33 "/>
+	        <RadioButton
+	          android:id="@+id/radio_case9"
+	          android:textColor="@color/white"
+	          android:text="case9 31 "/>
+	        <RadioButton
+	          android:id="@+id/radio_case10"
+	          android:textColor="@color/white"
+	          android:text="case10 35 "/>
+	        	        	        	        	        
+	        	        
+	        </RadioGroup> 
 	    
 	</LinearLayout>
 </FrameLayout>

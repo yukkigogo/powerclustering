@@ -129,10 +129,10 @@ public class MainActivity extends  FragmentActivity{
         icons = just4Colours.getIcons();
         
         //plot CL_AD_16
-        plotCluster(clusterData.get(2));
+        plotCluster(clusterData.get(0));
         
         //set up drawer lines 91 97
-        setUpDrawer(11);
+        setUpDrawer(39);
          
         
         //set radio button
@@ -167,31 +167,66 @@ public class MainActivity extends  FragmentActivity{
 		public void onCheckedChanged(RadioGroup group, int checkedId) {
 			radioButton = (RadioButton) findViewById(checkedId);
 			switch (checkedId) {
-			case R.id.radio_ad_16:
+			case R.id.radio_case1:
 				indx_mrker_list2=0;
 				plotCluster(clusterData.get(0));
-				setUpDrawer(16);
+				setUpDrawer(39);
 				break;
 
-			case R.id.radio_ad_37:
+			case R.id.radio_case2:
 				indx_mrker_list2=1;
 				plotCluster(clusterData.get(1));
+				setUpDrawer(34);
+				break;
+
+			case R.id.radio_case3:
+				indx_mrker_list2=2;
+				plotCluster(clusterData.get(2));
 				setUpDrawer(37);
 				break;
 
-			case R.id.radio_pf_11:
-				indx_mrker_list2=2;
-				plotCluster(clusterData.get(2));
-				setUpDrawer(11);
-				break;
-
-			case R.id.radio_pf_20:
+			case R.id.radio_case4:
 				indx_mrker_list2=3;
 				plotCluster(clusterData.get(3));
-				setUpDrawer(20);
+				setUpDrawer(33);
 				break;
 				
-				
+			case R.id.radio_case5:
+				indx_mrker_list2=4;
+				plotCluster(clusterData.get(4));
+				setUpDrawer(32);
+				break;
+
+			case R.id.radio_case6:
+				indx_mrker_list2=5;
+				plotCluster(clusterData.get(5));
+				setUpDrawer(34);
+				break;
+
+			case R.id.radio_case7:
+				indx_mrker_list2=6;
+				plotCluster(clusterData.get(6));
+				setUpDrawer(34);
+				break;
+
+			case R.id.radio_case8:
+				indx_mrker_list2=7;
+				plotCluster(clusterData.get(7));
+				setUpDrawer(33);
+				break;
+
+			case R.id.radio_case9:
+				indx_mrker_list2=8;
+				plotCluster(clusterData.get(8));
+				setUpDrawer(31);
+				break;
+
+			case R.id.radio_case10:
+				indx_mrker_list2=9;
+				plotCluster(clusterData.get(9));
+				setUpDrawer(35);
+				break;
+
 			default:
 				break;
 			}
@@ -221,7 +256,7 @@ public class MainActivity extends  FragmentActivity{
 		
 		if(marker_list2==null){
 			marker_list2 = new ArrayList<ArrayList<Marker>>();
-			for(int i=0;i<=37;i++) marker_list2.add(new ArrayList<Marker>()); 
+			for(int i=0;i<=39;i++) marker_list2.add(new ArrayList<Marker>()); 
 		}else for(ArrayList<Marker> ary : marker_list2)
 						for(Marker mk :  ary ) mk.remove(); 
 		
@@ -283,69 +318,124 @@ public class MainActivity extends  FragmentActivity{
 		// make 
 		clusterData = 	new ArrayList<HashMap<String,  Integer>>();	
 		
-
-		for(int i=0;i<4;i++){			
+		int CLUSTER_NUM=10;
+		
+		for(int i=0;i<CLUSTER_NUM;i++){			
 			HashMap<String, Integer> list = new HashMap<String, Integer>();
 
-			String fileList="";
+			//// 10 cases clusters start /////
+			String fileList="";			
 			switch (i){
 			case 0:
-				fileList ="CL_AD_16.csv";
+				fileList ="Solution_1_39.csv";
 				break;
 
 			case 1:
-				fileList ="CL_AD_37.csv";
+				fileList ="Solution_2_34.csv";
 				break;
 
 			case 2:
-				fileList ="CL_PF_11.csv";
+				fileList ="Solution_3_37.csv";
 				break;
 
 			case 3:
-				fileList ="CL_PF_20.csv";
+				fileList ="Solution_4_33.csv";
 				break;
+
+			case 4:
+				fileList ="Solution_5_32.csv";
+				break;
+
+			case 5:
+				fileList ="Solution_6_34.csv";
+				break;
+
+			case 6:
+				fileList ="Solution_7_34.csv";
+				break;
+
+			case 7:
+				fileList ="Solution_8_33.csv";
+				break;
+
+			case 8:
+				fileList ="Solution_9_31.csv";
+				break;
+
+			case 9:
+				fileList ="Solution_10_35.csv";
+				break;
+				
+			}					
 			
-			}		
 			
-//			try {			
+			try {			
+				BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(fileList)));
+				String str;
+				while ((str = br.readLine()) !=null) {
+					String[] s = str.split(",");
+					try {
+						list.put(s[0],Integer.parseInt(s[1]));						
+					} catch (Exception e) {
+						String str2 = e.getMessage();
+						Log.v("pc","parse problem"+str2);
+					}
+					
+				}
+			}catch (Exception e) {
+				String str3 = e.getMessage();
+				Log.e("pc", str3);
+			}
+				
+				
+			//// 10 case clusters end //////
+			
+			
+/////// 4 types clusters start ////
+//			String fileList="";
+//			switch (i){
+//			case 0:
+//				//fileList ="CL_AD_16.csv";
+//				break;
+//
+//			case 1:
+//				//fileList ="CL_AD_37.csv";
+//				break;
+//
+//			case 2:
+//				//fileList ="CL_PF_11.csv";
+//				break;
+//
+//			case 3:
+//				fileList ="CL_PF_20.csv";
+//				break;
 //			
-//			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(colourlist)));
+//			}		
+//			
+//		try {			
+//			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(fileList)));
 //			String str;
 //			while ((str = br.readLine()) !=null) {
-//				String s = "77"+str;
-//				//Log.w("pc", s);
-//				colours.add(Integer.parseInt(s,16));
+//				String[] s = str.split(",");
+//				String name;
+//				
+//				if(i==2 || i==3) name = PFs.get(Integer.parseInt(s[0]));
+//				else name = Ads.get(Integer.parseInt(s[0]));
+//				
+//				int cluster_num = Integer.parseInt(s[1]);
+//				//int col = colours.get(cluster_num);
+//				
+// 				list.put(name, cluster_num);
+//				
 //			}
-//			Log.e("pc", "size? "+ colours.size());
-//		} catch (Exception e) {
+//			
+//		}catch (IOException e) {
 //			String s = e.getMessage();
-//			Log.e("pc", "we got a problem : "+s );
+//			Log.e("pc", s);
 //		}
-			
-		try {			
-			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(fileList)));
-			String str;
-			while ((str = br.readLine()) !=null) {
-				String[] s = str.split(",");
-				String name;
-				
-				if(i==2 || i==3) name = PFs.get(Integer.parseInt(s[0]));
-				else name = Ads.get(Integer.parseInt(s[0]));
-				
-				int cluster_num = Integer.parseInt(s[1]);
-				//int col = colours.get(cluster_num);
-				
- 				list.put(name, cluster_num);
-				
-			}
-			
-		}catch (IOException e) {
-			String s = e.getMessage();
-			Log.e("pc", s);
-		}
-		
-		//Log.e("pc", "list size " + list.size());
-		clusterData.add(list);
+///////// 4 types clusters end //////
+
+			clusterData.add(list);
 		}
 		
 	}
@@ -498,28 +588,27 @@ public class MainActivity extends  FragmentActivity{
 			mMap.addPolyline(options);
 		}
 	
-		//// test for cluster 3
-		
-		try {
-			BufferedReader br = new BufferedReader(
-					new InputStreamReader(assetManager.open("filename.csv")));
-			String str;
-			PolygonOptions options = new PolygonOptions();
-			
-			while((str=br.readLine())!=null){
-				String[] strs = str.split(",");
-				double lng = Double.parseDouble(strs[0]);
-				double lat = Double.parseDouble(strs[1]);
-				options.add(new LatLng(lng, lat));
-			}
-			options.fillColor(0x44ff0000);
-			options.strokeWidth(0);
-			mMap.addPolygon(options);
-			
-		} catch (Exception e2) {
-			String str = e2.getMessage();
-			Log.e("pc",str);
-		}
+		//// test for cluster 3		
+//		try {
+//			BufferedReader br = new BufferedReader(
+//					new InputStreamReader(assetManager.open("filename.csv")));
+//			String str;
+//			PolygonOptions options = new PolygonOptions();
+//			
+//			while((str=br.readLine())!=null){
+//				String[] strs = str.split(",");
+//				double lng = Double.parseDouble(strs[0]);
+//				double lat = Double.parseDouble(strs[1]);
+//				options.add(new LatLng(lng, lat));
+//			}
+//			options.fillColor(0x44ff0000);
+//			options.strokeWidth(0);
+//			mMap.addPolygon(options);
+//			
+//		} catch (Exception e2) {
+//			String str = e2.getMessage();
+//			Log.e("pc",str);
+//		}
 		
 		
 		

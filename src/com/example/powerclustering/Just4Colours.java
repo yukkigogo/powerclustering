@@ -52,6 +52,8 @@ public class Just4Colours {
 		array.add(BitmapDescriptorFactory.fromResource(R.drawable.icon35));
 		array.add(BitmapDescriptorFactory.fromResource(R.drawable.icon36));
 		array.add(BitmapDescriptorFactory.fromResource(R.drawable.icon37));
+		array.add(BitmapDescriptorFactory.fromResource(R.drawable.icon38));
+		array.add(BitmapDescriptorFactory.fromResource(R.drawable.icon39));
 
 
 		
