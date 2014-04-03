@@ -1,4 +1,4 @@
-package com.example.powerclustering.controller;
+package com.example.rubenpowerclustering.controller;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -11,8 +11,8 @@ import java.util.List;
 import android.content.res.AssetManager;
 import android.util.Log;
 
-import com.example.powerclustering.model.Bus;
-import com.example.powerclustering.model.Edge;
+import com.example.rubenpowerclustering.model.Bus;
+import com.example.rubenpowerclustering.model.Edge;
 import com.google.android.gms.maps.model.LatLng;
 
 public class BusesEdgeInitialController {

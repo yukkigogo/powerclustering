@@ -27,48 +27,49 @@
 	          android:id="@+id/radio_case1"
 	          android:textColor="@color/white"
 	          android:checked="true"
-	          android:text="case1 39 "/>
+	          android:text="Case1 22 "/>
 	        <RadioButton
 	          android:id="@+id/radio_case2"
 	          android:textColor="@color/white"
-	          android:text="case2 34 "/>
+	          android:text="Case2 26 "/>
 	      
 	        <RadioButton
 	          android:id="@+id/radio_case3"
 	          android:textColor="@color/white"	          
-	          android:text="case3 37 "/>
+	          android:text="Case3 19 "/>
 	        <RadioButton
 	          android:id="@+id/radio_case4"
 	          android:textColor="@color/white"
-	          android:text="case4 33 "/>
-	        <RadioButton
+	          android:text="Case4 30 "/>
+  	      <RadioButton
 	          android:id="@+id/radio_case5"
 	          android:textColor="@color/white"
-	          android:text="case5 32 "/>
+	          android:text="Case5 25 "/>
 	        <RadioButton
 	          android:id="@+id/radio_case6"
 	          android:textColor="@color/white"
-	          android:text="case6 34 "/>
+	          android:text="Case6 30 "/>
 	        <RadioButton
 	          android:id="@+id/radio_case7"
 	          android:textColor="@color/white"
-	          android:text="case7 34 "/>
+	          android:text="Case7 33 "/>
 	        <RadioButton
 	          android:id="@+id/radio_case8"
 	          android:textColor="@color/white"
-	          android:text="case8 33 "/>
+	          android:text="Case8 29 "/>
 	        <RadioButton
 	          android:id="@+id/radio_case9"
 	          android:textColor="@color/white"
-	          android:text="case9 31 "/>
+	          android:text="Case9 30 "/>
 	        <RadioButton
 	          android:id="@+id/radio_case10"
 	          android:textColor="@color/white"
-	          android:text="case10 35 "/>
-	        	        	        	        	        
+	          android:text="Case10 30 "/>
+        	        	        	        	        
 	        	        
 	        </RadioGroup> 
 	    
 	</LinearLayout>
-</FrameLayout>
+
+ </FrameLayout>
 	

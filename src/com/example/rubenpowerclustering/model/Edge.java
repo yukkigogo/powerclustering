@@ -1,4 +1,4 @@
-package com.example.powerclustering.model;
+package com.example.rubenpowerclustering.model;
 
 public class Edge {
 	

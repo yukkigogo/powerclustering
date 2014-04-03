@@ -1,4 +1,4 @@
-package com.example.powerclustering.controller;
+package com.example.rubenpowerclustering.controller;
 
 import java.io.BufferedReader;
 import java.io.IOException;

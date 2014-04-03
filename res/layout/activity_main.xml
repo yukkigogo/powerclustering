@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
     <!-- The main content view -->
      <fragment 
-            android:name="com.example.powerclustering.MainMapFragment"
+            android:name="com.example.rubenpowerclustering.MainMapFragment"
             android:id="@+id/main_map_fragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
@@ -15,37 +15,37 @@
     
     <LinearLayout
     android:id="@+id/drawer_view"
-    android:layout_width="240dp"
+    android:layout_width="140dp"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:layout_gravity="start"
     android:background="#111">
     
      <LinearLayout 
-         android:layout_width="240dp"
+         android:layout_width="match_parent"
          android:layout_height="wrap_content"
-         android:orientation="horizontal"
+         android:orientation="vertical"
          >
     
          <Button
              android:id="@+id/drawer_all"
-             android:layout_width="wrap_content"
-             android:layout_height="match_parent"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
              android:layout_weight="1" 
              android:textColor="#fff"
              android:text="All"/>
          
           <Button
               android:id="@+id/drawer_clear"
-             android:layout_width="wrap_content"
-             android:layout_height="match_parent"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
              android:textColor="#fff"
              android:text="Clear All"
              android:layout_weight="1" />
      </LinearLayout>   
     
      <ListView android:id="@+id/left_drawer"
-        android:layout_width="240dp"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:choiceMode="multipleChoice"
