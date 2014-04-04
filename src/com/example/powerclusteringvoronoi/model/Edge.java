@@ -1,4 +1,4 @@
-package com.example.powerclustering.model;
+package com.example.powerclusteringvoronoi.model;
 
 public class Edge {
 	

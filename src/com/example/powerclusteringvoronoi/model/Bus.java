@@ -1,4 +1,4 @@
-package com.example.powerclustering.model;
+package com.example.powerclusteringvoronoi.model;
 
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;

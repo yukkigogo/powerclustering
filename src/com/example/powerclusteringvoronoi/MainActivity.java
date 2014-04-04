@@ -1,4 +1,4 @@
-package com.example.powerclustering;
+package com.example.powerclusteringvoronoi;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,14 +6,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 import org.apache.http.message.BufferedHeader;
+import org.json.JSONException;
 
-import com.example.powerclustering.controller.BusesEdgeInitialController;
-import com.example.powerclustering.controller.IDAdmittancePowerFlowsController;
-import com.example.powerclustering.model.Bus;
-import com.example.powerclustering.model.Edge;
+import com.example.powerclusteringvoronoi.controller.BusesEdgeInitialController;
+import com.example.powerclusteringvoronoi.controller.IDAdmittancePowerFlowsController;
+import com.example.powerclusteringvoronoi.model.Bus;
+import com.example.powerclusteringvoronoi.model.Edge;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -27,6 +31,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.Polygon;
 
 import android.R.color;
 import android.os.Bundle;
@@ -60,6 +65,29 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
+
+
+
+
+
+//JTS imports
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.io.ParseException;
+import com.vividsolutions.jts.io.WKTReader;
+import com.vividsolutions.jts.io.WKTWriter;
+import com.vividsolutions.jts.triangulate.VoronoiDiagramBuilder;
+import com.vividsolutions.jts.geom.GeometryCollection;
+import com.vividsolutions.jts.geom.MultiPoint;
+import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
+
+
 public class MainActivity extends  FragmentActivity{
 	
 	//system variable
@@ -74,12 +102,26 @@ public class MainActivity extends  FragmentActivity{
 	static final String EDGES_CSV ="edgesList.csv";
 	static final String ADs_CSV ="NodeIDsAd.csv";
 	static final String PFs_CSV = "NodeIDsPF.csv";
+	static final String PFs_10CSV = "case10lebelR.csv";
+	static final String UKcoastline = "coastlineUK3.csv";
 	HashMap<String,Bus> buses;
 	ArrayList<Edge> edges;
-	ArrayList<String> Ads; // index-Name for data
-	ArrayList<String> PFs; // index-Name for data
+	
+	String coast;
+	ArrayList<Pair<Integer, Pair<Double, Double>>> coast2;
+	
+	//ArrayList<String> Ads; // index-Name for data
+	//ArrayList<String> PFs; // index-Name for data
+	ArrayList<String> PFs10R;
 	ArrayList<Marker> bus_edge_marker_list;
 	ArrayList<ArrayList<Marker>> marker_list2;
+	
+	ArrayList<Polygon> poly_list=null;
+	//
+	int indx_mrker_list2;
+	int CASE_NUM=10;
+	final int MaxClusterType = 39;
+	
 	
 	//Cluster Data 4 versions
 	ArrayList<HashMap<String, Integer>> clusterData;
@@ -92,13 +134,14 @@ public class MainActivity extends  FragmentActivity{
 	
 	// For Navigation Drawer 
 	private CharSequence mTitle;
-	 private CharSequence mDrawerTitle;
+	private CharSequence mDrawerTitle;
 	private DrawerLayout mDrawerLayout;
 	private ListView mDrawerListView;
 	private LinearLayout mDrawerLinearLayout;
 	private ActionBarDrawerToggle mDrawerToggle;
 	private ArrayList<String> clusterTypes;
-	private int indx_mrker_list2 = 2;
+	private ArrayList<Integer> num_clusters;
+
 	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,10 +155,16 @@ public class MainActivity extends  FragmentActivity{
        BusesEdgeInitialController controller = new BusesEdgeInitialController();
        buses = controller.getBusListFromCSV(BUSES_CSV, assetManager);
 	   edges = controller.getEdgesListFromCSV(EDGES_CSV, assetManager, buses);
+	   // coast line
+	   coast = controller.getCoastPairs(UKcoastline,assetManager);
+	   coast2 = controller.getCoastPairs2(UKcoastline, assetManager);
+	   Log.w("pc",coast);
 	   IDAdmittancePowerFlowsController controller2 = new IDAdmittancePowerFlowsController();
-	   Ads = controller2.getNameFileToArray(ADs_CSV, assetManager);
-	   PFs = controller2.getNameFileToArray(PFs_CSV, assetManager);
-       
+	   //Ads = controller2.getNameFileToArray(ADs_CSV, assetManager);
+	   //PFs = controller2.getNameFileToArray(PFs_CSV, assetManager);
+       PFs10R = controller2.getNameFileToArray(PFs_10CSV, assetManager);
+	   
+	
 	   
        //set up the map
         setUpMapIfNeeded();
@@ -129,10 +178,10 @@ public class MainActivity extends  FragmentActivity{
         icons = just4Colours.getIcons();
         
         //plot CL_AD_16
-        plotCluster(clusterData.get(2));
+        plotCluster(clusterData.get(0));
         
         //set up drawer lines 91 97
-        setUpDrawer(11);
+        setUpDrawer(num_clusters.get(0));
          
         
         //set radio button
@@ -167,31 +216,66 @@ public class MainActivity extends  FragmentActivity{
 		public void onCheckedChanged(RadioGroup group, int checkedId) {
 			radioButton = (RadioButton) findViewById(checkedId);
 			switch (checkedId) {
-			case R.id.radio_ad_16:
+			case R.id.radio_case1:
 				indx_mrker_list2=0;
-				plotCluster(clusterData.get(0));
-				setUpDrawer(16);
+				plotCluster(clusterData.get(0));								
+				setUpDrawer(num_clusters.get(0));
 				break;
 
-			case R.id.radio_ad_37:
+			case R.id.radio_case2:
 				indx_mrker_list2=1;
 				plotCluster(clusterData.get(1));
-				setUpDrawer(37);
+				setUpDrawer(num_clusters.get(1));
 				break;
 
-			case R.id.radio_pf_11:
+			case R.id.radio_case3:
 				indx_mrker_list2=2;
 				plotCluster(clusterData.get(2));
-				setUpDrawer(11);
+				setUpDrawer(num_clusters.get(2));
 				break;
 
-			case R.id.radio_pf_20:
+			case R.id.radio_case4:
 				indx_mrker_list2=3;
 				plotCluster(clusterData.get(3));
-				setUpDrawer(20);
+				setUpDrawer(num_clusters.get(3));
 				break;
 				
-				
+			case R.id.radio_case5:
+				indx_mrker_list2=4;
+				plotCluster(clusterData.get(4));
+				setUpDrawer(num_clusters.get(4));
+				break;
+
+			case R.id.radio_case6:
+				indx_mrker_list2=5;
+				plotCluster(clusterData.get(5));
+				setUpDrawer(num_clusters.get(5));
+				break;
+
+			case R.id.radio_case7:
+				indx_mrker_list2=6;
+				plotCluster(clusterData.get(6));
+				setUpDrawer(num_clusters.get(6));
+				break;
+
+			case R.id.radio_case8:
+				indx_mrker_list2=7;
+				plotCluster(clusterData.get(7));
+				setUpDrawer(num_clusters.get(8));
+				break;
+
+			case R.id.radio_case9:
+				indx_mrker_list2=8;
+				plotCluster(clusterData.get(8));
+				setUpDrawer(num_clusters.get(9));
+				break;
+
+			case R.id.radio_case10:
+				indx_mrker_list2=9;
+				plotCluster(clusterData.get(9));
+				setUpDrawer(num_clusters.get(9));
+				break;
+
 			default:
 				break;
 			}
@@ -202,22 +286,9 @@ public class MainActivity extends  FragmentActivity{
 	}
 
 	private void plotCluster(HashMap<String, Integer> list) {
-		
-//delete all marker on the map
-//		for(Marker m: marker_list){
-//			m.remove();
-//		}
-//marker_list.clear();
-		
-//		for(String s: list.keySet()){
-//			// pair <cluster_num,colour>
-//			Bus b = buses.get(s);			
-//			Log.e("pc", "should be cluster num "+list.get(s).first);
-//			if(b!=null){
-//				b.setCircleColour(list.get(s).second);
-//				b.setClusterNum(list.get(s).first);
-//			}
-//		}
+		//Log.e("pc", "size "+coast.size());
+		plotBorders(coast2);
+
 		
 		if(marker_list2==null){
 			marker_list2 = new ArrayList<ArrayList<Marker>>();
@@ -226,102 +297,179 @@ public class MainActivity extends  FragmentActivity{
 						for(Marker mk :  ary ) mk.remove(); 
 		
 		
-
+		ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
+		Map<Coordinate, Integer> clusterlist = new HashMap<Coordinate, Integer>();
 		for(Bus bus : buses.values()){			
 			
 			if(list.containsKey(bus.getName())){
 				//bus.setCircleColour(list.get(bus.getName()).second);
 				bus.setClusterNum(list.get(bus.getName()));
 				//Log.e("pc", "show the name "+list.get(bus.getName()));
-				
+				int cluster_num = bus.getClusterNum();
+				LatLng geo = bus.getLatLng();
+				Coordinate coord = new Coordinate(geo.latitude, geo.longitude);
+				clusterlist.put(coord, cluster_num);
+				coords.add(coord);
+//				}
+				Marker marker = mMap.addMarker(new MarkerOptions()
+							.position(bus.getLatLng())
+							.snippet("Cluster :" +cluster_num)
+							.title(bus.getName())
+							.icon(icons.get(cluster_num)));
+
+				marker_list2.get(cluster_num).add(marker);
+
 			}else{
 				//bus.setCircleColour(0x00ffffff);
 				bus.setClusterNum(0);
 			}
 			
 			
-//			int px = getResources().getDimensionPixelSize(R.dimen.map_dot_marker_size);
-//			Bitmap mDotMarkerBitmap = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888);
-//			Canvas canvas = new Canvas(mDotMarkerBitmap);
-//			Drawable shape = getResources().getDrawable(R.drawable.marker_deb);
-//			shape.setBounds(0, 0, mDotMarkerBitmap.getWidth(), mDotMarkerBitmap.getHeight());
-//			shape.setColorFilter(new PorterDuffColorFilter
-//					(bus.getCirleColour(), Mode.MULTIPLY));
-//			shape.draw(canvas);
-//			
-			 
-			//BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.test_icon);
 
-			if(bus.getClusterNum()==0){
-				
-			}else{
-			int cluster_num = bus.getClusterNum();
-			Marker marker = mMap.addMarker(new MarkerOptions()
-						.position(bus.getLatLng())
-						.snippet("Cluster :" +cluster_num)
-						.title(bus.getName())
-						.icon(icons.get(cluster_num)));
-
-			marker_list2.get(cluster_num).add(marker);
-
-			
-			}
-			
-			
-//			CircleOptions option = new CircleOptions();
-//			option.center(b.getLatLng())
-//			.radius(2000)
-//			.strokeWidth(0)
-//			.fillColor(b.getCirleColour());
-//			mMap.addCircle(option);
 		}
-
+		drawVoronoi(coords, clusterlist);
 		
+	}
+
+	private void plotBorders(
+			ArrayList<Pair<Integer, Pair<Double, Double>>> coast2) {
+		
+		int count=0;
+		for(Pair<Integer, Pair<Double, Double>> p: coast2){
+			Marker marker = mMap.addMarker(new MarkerOptions()
+					.position(new LatLng(p.second.second, p.second.first))
+					.snippet("Cluster :" + p.first + "Lat Lon : " + p.second.second +","+p.second.first)
+					.title("Count : "+count)
+					.icon(getIcon(p.first)));
+			count++;
+		}
+		
+	}
+
+	private BitmapDescriptor getIcon(Integer first) {
+		
+		BitmapDescriptor b=null;
+		switch (first) {
+		case 0:
+		case 10:
+		case 20:
+			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE);
+			break;
+		case 1:
+		case 11:
+		case 21:
+			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE);
+			break;
+		case 2:
+		case 12:
+		case 22:
+			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN);
+			break;
+
+		case 3:
+		case 13:
+		case 23:
+			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
+			break;
+		case 4:
+		case 14:
+		case 24:
+			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA);
+			break;
+			
+		case 5:
+		case 15:
+		case 25:
+			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE);
+			break;
+		case 6:
+		case 16:
+		case 26:
+			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
+			break;
+		case 7:
+		case 17:
+		case 27:
+			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE);
+			break;
+		case 8:
+		case 18:
+		case 28:
+			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET);
+			break;
+		case 9:
+		case 19:
+		case 29:
+			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW);
+			break;
+
+			
+
+			
+			
+			
+		default:
+			break;
+		}
+		
+		
+		return b;
 	}
 
 	private void readClusterData() {
 		// make 
 		clusterData = 	new ArrayList<HashMap<String,  Integer>>();	
-		
+		num_clusters = new ArrayList<Integer>();
 
-		for(int i=0;i<4;i++){			
+		for(int i=0;i<CASE_NUM;i++){			
 			HashMap<String, Integer> list = new HashMap<String, Integer>();
 
 			String fileList="";
 			switch (i){
 			case 0:
-				fileList ="CL_AD_16.csv";
+				fileList ="pf_10_01.csv";  // pf
 				break;
 
 			case 1:
-				fileList ="CL_AD_37.csv";
+				fileList ="pf_10_02.csv";
 				break;
 
 			case 2:
-				fileList ="CL_PF_11.csv";
+				fileList ="pf_10_03.csv";
 				break;
 
 			case 3:
-				fileList ="CL_PF_20.csv";
+				fileList ="pf_10_04.csv";
+				break;
+
+			case 4:
+				fileList ="pf_10_05.csv";
+				break;
+
+			case 5:
+				fileList ="pf_10_06.csv";
+				break;
+
+			case 6:
+				fileList ="pf_10_07.csv";
+				break;
+
+			case 7:
+				fileList ="pf_10_08.csv";
+				break;
+
+			case 8:
+				fileList ="pf_10_09.csv";
+				break;
+
+			case 9:
+				fileList ="pf_10_10.csv";
 				break;
 			
 			}		
 			
-//			try {			
-//			
-//			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(colourlist)));
-//			String str;
-//			while ((str = br.readLine()) !=null) {
-//				String s = "77"+str;
-//				//Log.w("pc", s);
-//				colours.add(Integer.parseInt(s,16));
-//			}
-//			Log.e("pc", "size? "+ colours.size());
-//		} catch (Exception e) {
-//			String s = e.getMessage();
-//			Log.e("pc", "we got a problem : "+s );
-//		}
-			
+
+			int cluster_num=0;	
 		try {			
 			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(fileList)));
 			String str;
@@ -329,10 +477,10 @@ public class MainActivity extends  FragmentActivity{
 				String[] s = str.split(",");
 				String name;
 				
-				if(i==2 || i==3) name = PFs.get(Integer.parseInt(s[0]));
-				else name = Ads.get(Integer.parseInt(s[0]));
 				
-				int cluster_num = Integer.parseInt(s[1]);
+				name =PFs10R.get(Integer.parseInt(s[0]));
+				
+				cluster_num = Integer.parseInt(s[1]);
 				//int col = colours.get(cluster_num);
 				
  				list.put(name, cluster_num);
@@ -344,7 +492,8 @@ public class MainActivity extends  FragmentActivity{
 			Log.e("pc", s);
 		}
 		
-		//Log.e("pc", "list size " + list.size());
+		
+		num_clusters.add(cluster_num);
 		clusterData.add(list);
 		}
 		
@@ -498,46 +647,13 @@ public class MainActivity extends  FragmentActivity{
 			mMap.addPolyline(options);
 		}
 	
-		//// test for cluster 3
-		
-		try {
-			BufferedReader br = new BufferedReader(
-					new InputStreamReader(assetManager.open("filename.csv")));
-			String str;
-			PolygonOptions options = new PolygonOptions();
-			
-			while((str=br.readLine())!=null){
-				String[] strs = str.split(",");
-				double lng = Double.parseDouble(strs[0]);
-				double lat = Double.parseDouble(strs[1]);
-				options.add(new LatLng(lng, lat));
-			}
-			options.fillColor(0x44ff0000);
-			options.strokeWidth(0);
-			mMap.addPolygon(options);
-			
-		} catch (Exception e2) {
-			String str = e2.getMessage();
-			Log.e("pc",str);
-		}
-		
-		
-		
-		////////
+
 	
 	
 	}
 
 
 	
-
-
-
-			
-			
-			
-			
-
 
 	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -604,5 +720,95 @@ public class MainActivity extends  FragmentActivity{
 		}
 	
     }
+
     
+    // draw voronoi
+    private void drawVoronoi(ArrayList<Coordinate> coords, Map<Coordinate, Integer> clusterlist){
+    	Log.e("pc", "coast lines "+coast);
+        
+    	if(poly_list==null) poly_list = new ArrayList<Polygon>();
+    	
+  		for(Polygon p : poly_list)  
+  			p.remove(); 
+    	
+    	poly_list.clear();
+    	
+    	GeometryFactory fact = new GeometryFactory();
+	    VoronoiDiagramBuilder vdb = new VoronoiDiagramBuilder();
+	    vdb.setSites(coords);
+	    Geometry voronoi = vdb.getDiagram(fact);
+	    Map<Integer, ArrayList<Geometry>> regions = new HashMap<Integer, ArrayList<Geometry>>();
+	    // clustering regions
+	    for(int i=0;i<voronoi.getNumGeometries();i++){
+	    	Geometry geom = voronoi.getGeometryN(i);
+	    	int cluster_num = clusterlist.get(geom.getUserData());
+			if(regions.containsKey(cluster_num)){
+				regions.get(cluster_num).add(geom);
+			}else{
+				ArrayList<Geometry> cl = new ArrayList<Geometry>();
+				cl.add(geom);
+				regions.put(cluster_num, cl);
+			}	    	
+	    }
+	    Geometry clip = clipper();
+	    for(Integer key : regions.keySet()){
+	    	Geometry mpoly = new CascadedPolygonUnion(regions.get(key)).union();
+	    	drawpolygon(mpoly, clip);
+	    }
+    }
+    // clipping polygon
+    private Geometry clipper(){
+        WKTReader wktReader = new WKTReader();
+        Geometry clip = null;
+        try{
+        	String lines = "58.602671 -8.369429, 58.989711 -2.063277, 52.836028 2.375199, 50.659982 2.309281, 49.418196 -6.655562,53.677257 -5.117477, 58.602671 -8.369429";
+        //	clip = wktReader.read("POLYGON((58.602671 -8.369429, 58.989711 -2.063277, " +
+       	//		"52.836028 2.375199, 50.659982 2.309281, 49.418196 -6.655562,53.677257 -5.117477, 58.602671 -8.369429))");
+        	clip = wktReader.read("POLYGON((" +coast +"))");
+        
+        }catch  (Exception e){
+        	String str = e.getMessage();
+        	Log.e("pf","Main activity"+str);
+        }
+        return(clip);
+    }
+    // draw multi-polygon componentwisely
+    private void drawpolygon(Geometry mpoly, Geometry clipper) {
+    	
+    	
+    	
+        Random rnd = new Random();
+    	int col = Color.argb(100,rnd.nextInt(256),rnd.nextInt(256),rnd.nextInt(256));
+	    for(int j=0;j<mpoly.getNumGeometries();j++){
+	    	Geometry geom = mpoly.getGeometryN(j);
+	    	if(!clipper.contains(geom)){
+	    		geom = geom.intersection(clipper);
+	    	}	    	
+	        PolygonOptions poly = new PolygonOptions();
+	        poly.fillColor(col);
+	        poly.strokeWidth((float) 1.0);
+	        
+	    	ArrayList<LatLng> array = poly2latlng(geom);
+	    	// Initial point
+	    	poly.add(array.get(array.size()-1));
+
+	    	Iterator<LatLng> iter = array.iterator(); 
+	    	while(iter.hasNext()) {          
+	    		poly.add(iter.next());
+	    	}
+	    	
+	    		Polygon polygon =  mMap.addPolygon(poly);
+	    		poly_list.add(polygon);
+	    	
+	    }
+    }
+	// convert polygon to latlng
+	private ArrayList<LatLng> poly2latlng(Geometry poly){
+		ArrayList<LatLng> array = new ArrayList<LatLng>();
+		Coordinate[] coords = poly.getCoordinates();
+		for(int i=0;i<poly.getNumPoints();i++){
+			array.add(new LatLng(coords[i].x,coords[i].y));
+		}
+		return array;
+	}
 }

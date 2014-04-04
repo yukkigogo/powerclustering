@@ -1,4 +1,4 @@
-package com.example.powerclustering;
+package com.example.powerclusteringvoronoi;
 
 import java.util.ArrayList;
 

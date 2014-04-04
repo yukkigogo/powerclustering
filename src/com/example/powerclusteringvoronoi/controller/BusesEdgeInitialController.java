@@ -1,4 +1,4 @@
-package com.example.powerclustering.controller;
+package com.example.powerclusteringvoronoi.controller;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,9 +10,10 @@ import java.util.List;
 
 import android.content.res.AssetManager;
 import android.util.Log;
+import android.util.Pair;
 
-import com.example.powerclustering.model.Bus;
-import com.example.powerclustering.model.Edge;
+import com.example.powerclusteringvoronoi.model.Bus;
+import com.example.powerclusteringvoronoi.model.Edge;
 import com.google.android.gms.maps.model.LatLng;
 
 public class BusesEdgeInitialController {
@@ -77,6 +78,71 @@ public class BusesEdgeInitialController {
 			}
 		
 		return edges;
+	}
+
+
+	public String getCoastPairs(String filename, AssetManager assetManager){
+		String latlon="";
+		
+		try {
+			BufferedReader br = new BufferedReader(new 
+					InputStreamReader(assetManager.open(filename)));
+			String str;
+			int count=0;
+			while((str = br.readLine()) !=null){
+				latlon = latlon+str+",";
+//				if(count==0){
+//				latlon = latlon+str+",";
+//				count++;
+//				}else if(count==10){
+//					count=0;
+//				}else{	
+//					count++;
+//				}
+			} 
+				
+			
+		}catch (IOException e) {
+			String string = e.getMessage();
+			Log.e("pc", "got problem" + string);
+		}	
+		return latlon.substring(0, latlon.length()-1);
+	}
+	
+	public ArrayList<Pair<Integer, Pair<Double, Double>>> getCoastPairs2(
+			String ukcoast, AssetManager assetManager) {
+		
+		ArrayList<Pair<Integer, Pair<Double, Double>>> ary = 
+				new ArrayList<Pair<Integer,Pair<Double,Double>>>();
+		
+		try {
+			BufferedReader br = new BufferedReader(new 
+					InputStreamReader(assetManager.open(ukcoast)));
+			String str;
+			
+			int count =0;
+			while((str = br.readLine()) !=null) {
+//				if(str.startsWith(">")){
+//					count++;
+//				}else{
+					String[] latlon = str.split(" ");
+					double lat = Double.parseDouble(latlon[0]);
+					double lng = Double.parseDouble(latlon[1]);
+					
+					Pair ll = new Pair<Double, Double>(lat, lng);
+					Pair c = new Pair<Integer, Pair>(count, ll);
+					ary.add(c);
+//				}
+				
+			}
+			
+			
+			
+		}catch (IOException e) {
+			e.printStackTrace();
+		}	
+		
+		return ary;
 	}
 	
 	
