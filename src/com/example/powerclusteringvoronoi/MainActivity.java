@@ -103,7 +103,9 @@ public class MainActivity extends  FragmentActivity{
 	static final String ADs_CSV ="NodeIDsAd.csv";
 	static final String PFs_CSV = "NodeIDsPF.csv";
 	static final String PFs_10CSV = "case10lebelR.csv";
-	static final String UKcoastline = "coastlineUK3.csv";
+	static final String UKcoastline = "newcoast.csv";
+	static final String UKcoastline2 = "coast_with_arr.csv";
+
 	HashMap<String,Bus> buses;
 	ArrayList<Edge> edges;
 	
@@ -157,7 +159,7 @@ public class MainActivity extends  FragmentActivity{
 	   edges = controller.getEdgesListFromCSV(EDGES_CSV, assetManager, buses);
 	   // coast line
 	   coast = controller.getCoastPairs(UKcoastline,assetManager);
-	   coast2 = controller.getCoastPairs2(UKcoastline, assetManager);
+	   coast2 = controller.getCoastPairs2(UKcoastline2, assetManager);
 	   Log.w("pc",coast);
 	   IDAdmittancePowerFlowsController controller2 = new IDAdmittancePowerFlowsController();
 	   //Ads = controller2.getNameFileToArray(ADs_CSV, assetManager);
