@@ -109,29 +109,33 @@ public class BusesEdgeInitialController {
 		return latlon.substring(0, latlon.length()-1);
 	}
 	
-	public ArrayList<Pair<Integer, Pair<Double, Double>>> getCoastPairs2(
+	public ArrayList<Pair<Integer, Pair<Integer, Pair<Double, Double>>>> getCoastPairs2(
 			String ukcoast, AssetManager assetManager) {
 		
-		ArrayList<Pair<Integer, Pair<Double, Double>>> ary = 
-				new ArrayList<Pair<Integer,Pair<Double,Double>>>();
+		ArrayList<Pair<Integer, Pair<Integer, Pair<Double, Double>>>> ary = 
+				new ArrayList<Pair<Integer,Pair<Integer, Pair<Double,Double>>>>();
 		
 		try {
 			BufferedReader br = new BufferedReader(new 
 					InputStreamReader(assetManager.open(ukcoast)));
 			String str;
 			
-			int count =0;
+			//int count =0;
 			while((str = br.readLine()) !=null) {
 //				if(str.startsWith(">")){
 //					count++;
 //				}else{
 					String[] latlon = str.split(" ");
-					double lat = Double.parseDouble(latlon[0]);
-					double lng = Double.parseDouble(latlon[1]);
+					int line_num = Integer.parseInt(latlon[0]);
+					int cat_num = Integer.parseInt(latlon[1]);
+					double lat = Double.parseDouble(latlon[2]);
+					double lng = Double.parseDouble(latlon[3]);
 					
 					Pair ll = new Pair<Double, Double>(lat, lng);
-					Pair c = new Pair<Integer, Pair>(count, ll);
-					ary.add(c);
+					Pair c = new Pair<Integer, Pair>(cat_num, ll);
+					Pair d = new Pair<Integer, Pair>(line_num, c);
+					
+					ary.add(d);
 //				}
 				
 			}
