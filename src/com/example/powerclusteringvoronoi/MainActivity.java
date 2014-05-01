@@ -15,6 +15,7 @@ import org.apache.http.message.BufferedHeader;
 import org.json.JSONException;
 
 import com.example.powerclusteringvoronoi.controller.BusesEdgeInitialController;
+import com.example.powerclusteringvoronoi.controller.ColourSchameContorller;
 import com.example.powerclusteringvoronoi.controller.IDAdmittancePowerFlowsController;
 import com.example.powerclusteringvoronoi.model.Bus;
 import com.example.powerclusteringvoronoi.model.Edge;
@@ -30,6 +31,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.Polygon;
 
@@ -71,6 +73,8 @@ import android.widget.Toast;
 
 
 
+
+
 //JTS imports
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -103,13 +107,20 @@ public class MainActivity extends  FragmentActivity{
 	static final String PFs_CSV = "NodeIDsPF.csv";
 	static final String PFs_10CSV = "case10lebelR.csv";
 	static final String UKcoastline = "coast_with_arr_num_trim_add14_orderadd.csv";
-	static final String UKcoastline2 = "coast_with_arr_num.csv";
+	//static final String UKcoastline2 = "coast_with_arr_num.csv";
 
-	HashMap<String,Bus> buses;
-	ArrayList<Edge> edges;
+	static final String Colur_CSV = "colour_deg.csv";	
 	
+	HashMap<String, Pair<Bus,Marker>> buses;
+	ArrayList<Pair<Edge,Polyline>> edges;
+	
+	// coastline for clipper 
 	String coast;
-	ArrayList<Pair<Integer, Pair<Integer, Pair<Double, Double>>>> coast2;
+	
+	// colour
+	ArrayList<int[]> colurs;
+	
+	///ArrayList<Pair<Integer, Pair<Integer, Pair<Double, Double>>>> coast2;
 	
 	//ArrayList<String> Ads; // index-Name for data
 	//ArrayList<String> PFs; // index-Name for data
@@ -154,24 +165,30 @@ public class MainActivity extends  FragmentActivity{
       //Initialization for system  
        assetManager = getAssets();		
 
-       //make lists for buses and edges
-       BusesEdgeInitialController controller = new BusesEdgeInitialController();
-       buses = controller.getBusListFromCSV(BUSES_CSV, assetManager);
-	   edges = controller.getEdgesListFromCSV(EDGES_CSV, assetManager, buses);
-	   // coast line
-	   coast = controller.getCoastPairs(UKcoastline,assetManager);
-	   coast2 = controller.getCoastPairs2(UKcoastline2, assetManager);
-	   //Log.w("pc",coast);
+
 	   IDAdmittancePowerFlowsController controller2 = new IDAdmittancePowerFlowsController();
 	   //Ads = controller2.getNameFileToArray(ADs_CSV, assetManager);
 	   //PFs = controller2.getNameFileToArray(PFs_CSV, assetManager);
        PFs10R = controller2.getNameFileToArray(PFs_10CSV, assetManager);
 	   
+       //create colour schame
+       ColourSchameContorller csc = new ColourSchameContorller();
+       colurs = csc.getColurSchameList(Colur_CSV, assetManager);
 	
 	   
        //set up the map
         setUpMapIfNeeded();
-  	  	plotBusesAndEdgees(buses, edges);
+        
+        // initial setting  for buses and edges icons -  read file and plot on the map 
+        BusesEdgeInitialController controller = new BusesEdgeInitialController();
+        buses = controller.getBusListFromCSV(BUSES_CSV, assetManager, mMap);
+        edges = controller.getEdgesListFromCSV(EDGES_CSV, assetManager, buses, mMap);
+        	
+        // obtain costline latlng string
+        coast = controller.getCoastPairs(UKcoastline,assetManager);
+
+        
+  	  	//plotBusesAndEdgees(buses, edges);
         
        //read csv and plot 
         readClusterData();
@@ -308,15 +325,17 @@ public class MainActivity extends  FragmentActivity{
 		
 		
 		ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
-		Map<Coordinate, Integer> clusterlist = new HashMap<Coordinate, Integer>();
-		for(Bus bus : buses.values()){			
+		HashMap<Coordinate, Integer> clusterlist = new HashMap<Coordinate, Integer>();
+		
+		// 
+		for(Pair<Bus,Marker> p : buses.values()){			
 			
-			if(list.containsKey(bus.getName())){
+			if(list.containsKey(p.first.getName())){
 				//bus.setCircleColour(list.get(bus.getName()).second);
-				bus.setClusterNum(list.get(bus.getName()));
+				p.first.setClusterNum(list.get(p.first.getName()));
 				//Log.e("pc", "show the name "+list.get(bus.getName()));
-				int cluster_num = bus.getClusterNum();
-				LatLng geo = bus.getLatLng();
+				int cluster_num = p.first.getClusterNum();
+				LatLng geo = p.first.getLatLng();
 				Coordinate coord = new Coordinate(geo.latitude, geo.longitude);
 				clusterlist.put(coord, cluster_num);
 				coords.add(coord);
@@ -331,94 +350,14 @@ public class MainActivity extends  FragmentActivity{
 
 			}else{
 				//bus.setCircleColour(0x00ffffff);
-				bus.setClusterNum(0);
+				p.first.setClusterNum(0);
 			}
-			
-			
 
 		}
 		drawVoronoi(coords, clusterlist);
 		
 	}
 
-//	private void plotBorders(
-//			ArrayList<Pair<Integer, Pair<Integer, Pair<Double, Double>>>> coast2) {
-//		
-//		
-//		for(Pair<Integer, Pair<Integer, Pair<Double, Double>>> p: coast2){
-//			Marker marker = mMap.addMarker(new MarkerOptions()
-//					.position(new LatLng(p.second.second.second, p.second.second.first))
-//					.snippet( "Lat Lon : " + p.second.second.second +","+p.second.second.first)
-//					.title("Cluster :" + p.first +" : "+p.second.first)
-//					.icon(getIcon(p.first)));
-//			
-//		}
-//		
-//	}
-//
-//	private BitmapDescriptor getIcon(Integer first) {
-//		
-//		BitmapDescriptor b=null;
-//		switch (first) {
-//		case 0:
-//		case 10:
-//		case 20:
-//			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE);
-//			break;
-//		case 1:
-//		case 11:
-//		case 21:
-//			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE);
-//			break;
-//		case 2:
-//		case 12:
-//		case 22:
-//			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN);
-//			break;
-//
-//		case 3:
-//		case 13:
-//		case 23:
-//			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
-//			break;
-//		case 4:
-//		case 14:
-//		case 24:
-//			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA);
-//			break;
-//			
-//		case 5:
-//		case 15:
-//		case 25:
-//			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE);
-//			break;
-//		case 6:
-//		case 16:
-//		case 26:
-//			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
-//			break;
-//		case 7:
-//		case 17:
-//		case 27:
-//			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE);
-//			break;
-//		case 8:
-//		case 18:
-//		case 28:
-//			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET);
-//			break;
-//		case 9:
-//		case 19:
-//		case 29:
-//			b = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW);
-//			break;
-//		default:
-//			break;
-//		}
-//		
-//		
-//		return b;
-//	}
 
 	private void readClusterData() {
 		// make 
@@ -472,7 +411,7 @@ public class MainActivity extends  FragmentActivity{
 			
 			}		
 			
-
+			// total number of clusters
 			int cluster_num=0;	
 		try {			
 			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(fileList)));
@@ -496,7 +435,7 @@ public class MainActivity extends  FragmentActivity{
 			Log.e("pc", s);
 		}
 		
-		
+		// add the last number of cluster
 		num_clusters.add(cluster_num);
 		clusterData.add(list);
 		}
@@ -524,6 +463,7 @@ public class MainActivity extends  FragmentActivity{
     	if(clusterTypes!=null) clusterTypes.clear();
     	else clusterTypes = new ArrayList<String>();
     	
+    	// array for drawer list
     	for(int i=1;i<=cluster_num;i++) clusterTypes.add("Cluster "+i);
     	
     	//setup up the list    	
@@ -627,34 +567,34 @@ public class MainActivity extends  FragmentActivity{
 	
 	
 
-	private void plotBusesAndEdgees(HashMap<String, Bus> b, ArrayList<Edge> e) {
-		bus_edge_marker_list = new  ArrayList<Marker>();
-		//plot marker
-		BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.dot);
-		for(Bus bus : b.values()){
-			
-			Marker marker = mMap.addMarker(new MarkerOptions().position(bus.getLatLng())
-					.title(bus.getName())
-					.icon(icon));
-			bus_edge_marker_list.add(marker);
-		}	
-	
-		//plot polyline
-		for(Edge edge : e){
-			PolylineOptions options = new PolylineOptions();
-			options.add(edge.getStartBus().getLatLng());
-			options.add(edge.getEndBus().getLatLng());
-			options.color(Color.CYAN);
-			options.geodesic(true);
-			options.width(2);
-			
-			mMap.addPolyline(options);
-		}
-	
-
-	
-	
-	}
+//	private void plotBusesAndEdgees(HashMap<String, Bus> b, ArrayList<Edge> e) {
+//		bus_edge_marker_list = new  ArrayList<Marker>();
+//		//plot marker
+//		BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.dot);
+//		for(Bus bus : b.values()){
+//			
+//			Marker marker = mMap.addMarker(new MarkerOptions().position(bus.getLatLng())
+//					.title(bus.getName())
+//					.icon(icon));
+//			bus_edge_marker_list.add(marker);
+//		}	
+//	
+//		//plot polyline
+//		for(Edge edge : e){
+//			PolylineOptions options = new PolylineOptions();
+//			options.add(edge.getStartBus().getLatLng());
+//			options.add(edge.getEndBus().getLatLng());
+//			options.color(Color.CYAN);
+//			options.geodesic(true);
+//			options.width(2);
+//			
+//			mMap.addPolyline(options);
+//		}
+//	
+//
+//	
+//	
+//	}
 
 
 	
@@ -726,11 +666,8 @@ public class MainActivity extends  FragmentActivity{
     
     // draw voronoi
     private void drawVoronoi(ArrayList<Coordinate> coords, Map<Coordinate, Integer> clusterlist){
-    	//Log.e("pc", "coast lines "+coast);
-        
     	
     	if(poly_list==null) poly_list = new ArrayList<ArrayList<Polygon>>();
-    	
     	
     	// remove current voronoi
   		for(ArrayList<Polygon> ary : poly_list){  
@@ -740,45 +677,38 @@ public class MainActivity extends  FragmentActivity{
     	poly_list.clear();
     	poly_list.add(new ArrayList<Polygon>()); // fake array 
     	
+    	//
     	GeometryFactory fact = new GeometryFactory();
 	    VoronoiDiagramBuilder vdb = new VoronoiDiagramBuilder();
-	    vdb.setSites(coords);
-	    Geometry voronoi = vdb.getDiagram(fact);
+	    vdb.setSites(coords); // create voronoi
+	    Geometry voronoi = vdb.getDiagram(fact); // geometory collections
 	 
 	    
 	    Map<Integer, ArrayList<Geometry>> regions = new HashMap<Integer, ArrayList<Geometry>>();
-	    // clustering regions
-	    for(int i=0;i<voronoi.getNumGeometries();i++){
-	    	Geometry geom = voronoi.getGeometryN(i);
-	    	int cluster_num = clusterlist.get(geom.getUserData());
-			if(regions.containsKey(cluster_num)){
+	   
+	    // clustering regions 
+	    for(int i=0;i<voronoi.getNumGeometries();i++){ // loop all geometories
+	    	Geometry geom = voronoi.getGeometryN(i); // each geometory
+	    	int cluster_num = clusterlist.get(geom.getUserData()); // key coordinate val cluster_num
+			if(regions.containsKey(cluster_num)){ // num of cluster already made then add
 				regions.get(cluster_num).add(geom);
-			}else{
+			}else{ // otherwise make new 
 				ArrayList<Geometry> cl = new ArrayList<Geometry>();
 				cl.add(geom);
 				regions.put(cluster_num, cl);
 			}	    	
 	    }
+	    
 	    Geometry clip = clipper();
 
 	    for(Integer key : regions.keySet()){
 	    	Geometry mpoly = new CascadedPolygonUnion(regions.get(key)).union();
-	    	ArrayList<Polygon> arraylist = new ArrayList<Polygon>();
-//	    	Log.e("pc", "region key?  "+key);
-//	    	if(key==16||key==8 ||key==7){
-	    		drawpolygon(mpoly, clip, arraylist);
-	    		poly_list.add(arraylist);
-//	    		if(key==11 || key==20||key==17) {
-//	    			ArrayList<LatLng> ary = poly2latlng(mpoly);
-//	    			String lat ="";
-//	    			
-//	    			for(LatLng p : ary){
-//	    				lat = lat+ Double.toString(p.latitude)+", "+Double.toString(p.longitude)+"\n";
-//	    				//lng = lng + Double.toString(p.longitude)+" , ";
-//	    			}
-//	    			Log.w("pc", "lat lon" + lat );
-//	    		}
-//	    	}
+//	        Random rnd = new Random();
+//	    	int col = Color.argb(100,rnd.nextInt(256),rnd.nextInt(256),rnd.nextInt(256));
+
+	    	int col = Color.argb(100, colurs.get(key)[0], colurs.get(key)[1], colurs.get(key)[2]);
+	    	ArrayList<Polygon> arraylist = drawpolygon(mpoly, clip, col);
+	    	poly_list.add(arraylist);
 	    }
 	    Log.e("pc",regions.keySet().size()+" size of key");
 	    Log.e("pc",poly_list.size()+" size of polylist");
@@ -791,7 +721,7 @@ public class MainActivity extends  FragmentActivity{
         WKTReader wktReader = new WKTReader();
         Geometry clip = null;
         try{
-        	String lines = "58.602671 -8.369429, 58.989711 -2.063277, 52.836028 2.375199, 50.659982 2.309281, 49.418196 -6.655562,53.677257 -5.117477, 58.602671 -8.369429";
+        	// String lines = "58.602671 -8.369429, 58.989711 -2.063277, 52.836028 2.375199, 50.659982 2.309281, 49.418196 -6.655562,53.677257 -5.117477, 58.602671 -8.369429";
         	//clip = wktReader.read("POLYGON((58.602671 -8.369429, 58.989711 -2.063277, " +
        		//	"52.836028 2.375199, 50.659982 2.309281, 49.418196 -6.655562,53.677257 -5.117477, 58.602671 -8.369429))");
         	clip = wktReader.read("POLYGON((" +coast +"))");
@@ -802,33 +732,18 @@ public class MainActivity extends  FragmentActivity{
         }
         return(clip);
     }
-    // draw multi-polygon component wisely
-    private void drawpolygon(Geometry mpoly, Geometry clipper, ArrayList<Polygon> arraylist) {
+    // draw multi-polygon component wisely,  return an array of polygons. 
+    private ArrayList<Polygon> drawpolygon(Geometry mpoly, Geometry clipper, int col) {
     	
-        Random rnd = new Random();
-    	int col = Color.argb(100,rnd.nextInt(256),rnd.nextInt(256),rnd.nextInt(256));
-    	
-    	
-    	
+    	ArrayList<Polygon> arraylist = new ArrayList<Polygon>();	
+        	
     	for(int j=0;j<mpoly.getNumGeometries();j++){
 	    	Geometry geom = mpoly.getGeometryN(j);
 	    	if(!clipper.contains(geom)){
 	    		geom = geom.intersection(clipper);
 	    	}	    	
 	    	
-	    	
-//	    	ArrayList<LatLng> ary = poly2latlng(geom);			
-//	    	String lat ="";			
-//			for(LatLng p : ary){
-//				lat = lat+ Double.toString(p.latitude)+", "+Double.toString(p.longitude)+"\n";
-//				//lng = lng + Double.toString(p.longitude)+" , ";
-//			}
-//			Log.w("pc", "lat lon" + lat );
-//			Log.w("pc","_______________");
-	    	
-	    	
-	    	
-	    	
+	    	// polygon options 
 	        PolygonOptions poly = new PolygonOptions();
 	        poly.fillColor(col);
 	        poly.strokeWidth((float) 0.0);
@@ -837,32 +752,21 @@ public class MainActivity extends  FragmentActivity{
 	    	
 	    	// fix geometry info if the starting geolocation and end geolocation are not the same.
 	    	if(!array.get(0).equals(array.get(array.size()-1))){   		
-	    		Log.e("pc", "GOT PROBLEM OF THIS KEY ");
-	    		fixGeoInfoAndPlot(poly, array,arraylist);
+	    		Log.e("pc", "Start and end latnon don't match - need to fix it");
+	    		fixGeoInfoAndPlot(poly,array,arraylist);
 
-	    	}else {
+	    	}else{ // if geom is normal
 	    		for(LatLng point : array) poly.add(point);
+
 	    		Polygon polygon =  mMap.addPolygon(poly);
-	    		
-	    		//polygon.
-	    		
 	    		arraylist.add(polygon);
-	    	
 	    	}
-	    	
-	    	
-	    	// Initial point
-//	    	poly.add(array.get(array.size()-1));
-//
-//	    	Iterator<LatLng> iter = array.iterator(); 
-//	    	while(iter.hasNext()) {          
-//	    		poly.add(iter.next());
-//	    	}
-	    	// till here point
-	    	
-	    	
+	    		    	
 	    }
+  
+    	return arraylist;
     }
+    
 	private void fixGeoInfoAndPlot(PolygonOptions poly, ArrayList<LatLng> geoms, ArrayList<Polygon> ary) {
 		//fix and make another array in array list
 		// I believe the geometry wasn't separated and contains more than 2 geometries  	
@@ -877,17 +781,16 @@ public class MainActivity extends  FragmentActivity{
 				if(!top.equals(geo))	poly.add(geo);
 				else{
 					poly.add(geo);
-					Polygon polygon =  mMap.addPolygon(poly);
+					Polygon polygon =  mMap.addPolygon(poly); // ploting to map 
 					ary.add(polygon);
 					init = true;
 				}
 			}
-		
+			
 		}
 		
 			Polygon polygon =  mMap.addPolygon(poly);
 			ary.add(polygon);
-		
 	}
 
 	// convert polygon to latlng

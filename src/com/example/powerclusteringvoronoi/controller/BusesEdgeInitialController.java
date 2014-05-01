@@ -9,17 +9,28 @@ import java.util.HashMap;
 import java.util.List;
 
 import android.content.res.AssetManager;
+import android.graphics.Color;
 import android.util.Log;
 import android.util.Pair;
 
+import com.example.powerclusteringvoronoi.R;
 import com.example.powerclusteringvoronoi.model.Bus;
 import com.example.powerclusteringvoronoi.model.Edge;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 public class BusesEdgeInitialController {
 
-	public HashMap<String, Bus> getBusListFromCSV(String filename, AssetManager assetManager) {
-		HashMap<String, Bus> buses = new HashMap<String, Bus>();
+	public HashMap<String, Pair<Bus,Marker>> getBusListFromCSV(String filename, AssetManager assetManager, GoogleMap map) {		
+		HashMap<String, Pair<Bus,Marker>> buses = new HashMap<String, Pair<Bus,Marker>>();
+		// small icon
+		BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.dot);
 		
 		//missing Name
 		File file =  new File("missing");
@@ -35,7 +46,13 @@ public class BusesEdgeInitialController {
 					double lat = Double.parseDouble(strs[2]);
 					double lon = Double.parseDouble(strs[1]);
 					Bus bus = new Bus(lat, lon, strs[0]);
-					buses.put(strs[0],bus);
+					//buses.put(strs[0],bus);
+
+					Marker marker = map.addMarker(new MarkerOptions().position(bus.getLatLng())
+							.title(bus.getName()).icon(icon));
+					
+					buses.put(strs[0], new Pair<Bus, Marker>(bus, marker));
+				
 				} catch (Exception e) {
 					Log.e("pc" , " lat lng problem");
 				}
@@ -48,10 +65,15 @@ public class BusesEdgeInitialController {
 		
 		return buses;
 	}		
+	
+	
+	
+	
+	
+	
 		
-		
-	public ArrayList<Edge> getEdgesListFromCSV(String edgesCsv, AssetManager assetManager, HashMap<String,Bus> buses) {
-		ArrayList<Edge> edges = new ArrayList<Edge>();
+	public ArrayList<Pair<Edge,Polyline>> getEdgesListFromCSV(String edgesCsv, AssetManager assetManager, HashMap<String, Pair<Bus,Marker>> buses, GoogleMap map) {
+		ArrayList<Pair<Edge,Polyline>> edges = new ArrayList<Pair<Edge,Polyline>>();
 		
 	
 		try {
@@ -59,23 +81,42 @@ public class BusesEdgeInitialController {
 			String str;
 			int count =0;
 			while((str = br.readLine()) !=null) {
+				Edge edge = null;
 				String[] strs = str.split(",");
-				Bus start = buses.get(strs[0]);
-				Bus end = buses.get(strs[1]);
-				if(start!=null && end!=null)
-					edges.add(new Edge(start, end));	
-				else if(start==null){
+				Pair<Bus,Marker> start = buses.get(strs[0]);
+				Pair<Bus,Marker> end = buses.get(strs[1]);
+				if(start!=null && end!=null){
+					edge = new Edge(start.first, end.first);
+
+					PolylineOptions options = new PolylineOptions();
+					options.add(edge.getStartBus().getLatLng());
+					options.add(edge.getEndBus().getLatLng());
+					options.color(Color.CYAN);
+					options.geodesic(true);
+					options.width(2);
+
+					Polyline line = map.addPolyline(options);
+					edges.add(new Pair<Edge,Polyline>(edge,line));
+					
+					/// edges.add(edge);	
+				}else if(start==null){
 					//Log.e("pc","start : "+strs[0]);
 					count++;
 				}else if(end==null){
 					//Log.e("pc", "end : "+strs[1]);
 					count++;
 				}
+			
+			
 			}
+			
+			
+			
 			Log.e("pc", "number of null : "+count);
 		}catch (IOException e) {
-				e.printStackTrace();
-			}
+			String str = e.getMessage();
+			Log.v("pc",str);
+		}
 		
 		return edges;
 	}
@@ -91,14 +132,6 @@ public class BusesEdgeInitialController {
 			int count=0;
 			while((str = br.readLine()) !=null){
 				latlon = latlon+str+",";
-//				if(count==0){
-//				latlon = latlon+str+",";
-//				count++;
-//				}else if(count==10){
-//					count=0;
-//				}else{	
-//					count++;
-//				}
 			} 
 				
 			
@@ -109,45 +142,6 @@ public class BusesEdgeInitialController {
 		return latlon.substring(0, latlon.length()-1);
 	}
 	
-	public ArrayList<Pair<Integer, Pair<Integer, Pair<Double, Double>>>> getCoastPairs2(
-			String ukcoast, AssetManager assetManager) {
-		
-		ArrayList<Pair<Integer, Pair<Integer, Pair<Double, Double>>>> ary = 
-				new ArrayList<Pair<Integer,Pair<Integer, Pair<Double,Double>>>>();
-		
-		try {
-			BufferedReader br = new BufferedReader(new 
-					InputStreamReader(assetManager.open(ukcoast)));
-			String str;
-			
-			//int count =0;
-			while((str = br.readLine()) !=null) {
-//				if(str.startsWith(">")){
-//					count++;
-//				}else{
-					String[] latlon = str.split(" ");
-					int line_num = Integer.parseInt(latlon[0]);
-					int cat_num = Integer.parseInt(latlon[1]);
-					double lat = Double.parseDouble(latlon[2]);
-					double lng = Double.parseDouble(latlon[3]);
-					
-					Pair ll = new Pair<Double, Double>(lat, lng);
-					Pair c = new Pair<Integer, Pair>(cat_num, ll);
-					Pair d = new Pair<Integer, Pair>(line_num, c);
-					
-					ary.add(d);
-//				}
-				
-			}
-			
-			
-			
-		}catch (IOException e) {
-			e.printStackTrace();
-		}	
-		
-		return ary;
-	}
 	
 	
 	

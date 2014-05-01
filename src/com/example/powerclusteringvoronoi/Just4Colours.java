@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 
+/// Currently I don't use this class!!!
 public class Just4Colours {
 
 	ArrayList<BitmapDescriptor> array;

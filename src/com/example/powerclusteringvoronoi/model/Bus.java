@@ -10,7 +10,7 @@ public class Bus {
 	private String name;
 	private int colour;
 	private int cluster_num;
-	private CircleOptions circleoption;
+	//private CircleOptions circleoption;
 
 	
 	public Bus(double lat, double lng, String name) {
