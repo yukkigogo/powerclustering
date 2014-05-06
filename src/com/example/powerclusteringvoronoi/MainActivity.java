@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -83,6 +84,7 @@ import android.widget.Toast;
 
 
 
+
 //JTS imports
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -115,7 +117,6 @@ public class MainActivity extends  FragmentActivity{
 	static final String PFs_CSV = "NodeIDsPF.csv";
 	static final String PFs_10CSV = "case10lebelR.csv";
 	static final String UKcoastline = "coast_with_arr_num_trim_add14_orderadd.csv";
-	//static final String UKcoastline2 = "coast_with_arr_num.csv";
 
 	static final String Colur_CSV = "colour_deg.csv";	
 	
@@ -130,27 +131,11 @@ public class MainActivity extends  FragmentActivity{
 	// colour
 	ArrayList<int[]> colurs;
 	
-	///ArrayList<Pair<Integer, Pair<Integer, Pair<Double, Double>>>> coast2;
-	
-	//ArrayList<String> Ads; // index-Name for data
-	//ArrayList<String> PFs; // index-Name for data
 	ArrayList<String> PFs10R;
 	ArrayList<Marker> bus_edge_marker_list;
 	ArrayList<ArrayList<Marker>> marker_list2;
 	
-	//ArrayList<ArrayList<Polygon>> poly_list=null;
 	HashMap<Integer, Cluster> cluster_list;
-	
-	//
-	int indx_mrker_list2;
-	int CASE_NUM=10;
-	final int MaxClusterType = 39;
-	
-	
-	//Cluster Data 4 versions
-	ArrayList<HashMap<String, Integer>> clusterData;
-	ArrayList<BitmapDescriptor> icons;
-
 	
 	//RadioButton 
 	RadioGroup radioGroup;
@@ -163,9 +148,6 @@ public class MainActivity extends  FragmentActivity{
 	private ListView mDrawerListView;
 	private LinearLayout mDrawerLinearLayout;
 	private ActionBarDrawerToggle mDrawerToggle;
-	
-	private ArrayList<String> clusterTypes;
-	private ArrayList<Integer> num_clusters;
 
 	
 	@Override
@@ -198,52 +180,21 @@ public class MainActivity extends  FragmentActivity{
         // obtain costline latlng string
         coast = controller.getCoastPairs(UKcoastline,assetManager);
 
-        //buildVoronoiRegion(buses);
-        
-        
-  	  	//plotBusesAndEdgees(buses, edges);
-       //read csv and plot 
-        //readClusterData();
-        
-        ///// make an array for icons
-        //Just4Colours just4Colours = new Just4Colours();
-        //icons = just4Colours.getIcons();
-        
-        //plot CL_AD_16
-        //  plotCluster(0);
         drawCluster(0);
-        
-        //set up drawer lines 91 97
-        //setUpDrawer(22);
-         
+            
         
         //set radio button
         setRadios();
         
-       // Log.e("pc", "polylist "+ poly_list.size());
         
     }
 
 	private void setAllClusters(boolean b){
-//		for(ArrayList<Polygon> ary : poly_list)
-//			for(Polygon mk :  ary ) mk.setVisible(false); 
-//		
-//		if(b){ // if true, means all on
-			// all listview items are ON and plot all the cluster
-			//plotCluster(clusterData.get(indx_mrker_list2));
-	    	for (int c : cluster_list.keySet()){
+
+		for (int c : cluster_list.keySet()){
 	    		mDrawerListView.setItemChecked(c-1, b);
 	    		for(Polygon p : cluster_list.get(c).getPolygonList()) p.setVisible(b);
 	    	}	
-			
-	    		
-
-//		}else{
-//			// all list view items are off and clear from map 			
-//	    	for(Cluster c : cluster_list.values())) 
-//	    		mDrawerListView.setItemChecked(i, false);
-//		}
-		//mDrawerLayout.closeDrawer(mDrawerLinearLayout);
 
 	}
 	
@@ -257,63 +208,43 @@ public class MainActivity extends  FragmentActivity{
 			radioButton = (RadioButton) findViewById(checkedId);
 			switch (checkedId) {
 			case R.id.radio_case1:
-				//indx_mrker_list2=0;
 				drawCluster(0);								
-				//setUpDrawer(num_clusters.get(0));
 				break;
 
 			case R.id.radio_case2:
-				//indx_mrker_list2=1;
 				drawCluster(1);
-				//setUpDrawer(num_clusters.get(1));
 				break;
 
 			case R.id.radio_case3:
-				//indx_mrker_list2=2;
 				drawCluster(2);
-				//setUpDrawer(num_clusters.get(2));
 				break;
 
 			case R.id.radio_case4:
-				//indx_mrker_list2=3;
 				drawCluster(3);
-				//setUpDrawer(num_clusters.get(3));
 				break;
 				
 			case R.id.radio_case5:
-				//indx_mrker_list2=4;
 				drawCluster(4);
-				//setUpDrawer(num_clusters.get(4));
 				break;
 
 			case R.id.radio_case6:
-				//indx_mrker_list2=5;
 				drawCluster(5);
-				//setUpDrawer(num_clusters.get(5));
 				break;
 
 			case R.id.radio_case7:
-				//indx_mrker_list2=6;
 				drawCluster(6);
-				//setUpDrawer(num_clusters.get(6));
 				break;
 
 			case R.id.radio_case8:
-				//indx_mrker_list2=7;
 				drawCluster(7);
-				//setUpDrawer(num_clusters.get(8));
 				break;
 
 			case R.id.radio_case9:
-				//indx_mrker_list2=8;
 				drawCluster(8);
-				//setUpDrawer(num_clusters.get(9));
 				break;
 
 			case R.id.radio_case10:
-				//indx_mrker_list2=9;
 				drawCluster(9);
-				//setUpDrawer(num_clusters.get(9));
 				break;
 
 			default:
@@ -324,56 +255,6 @@ public class MainActivity extends  FragmentActivity{
 		}
 	});
 	}
-
-//	private void plotCluster(int pf_case) {
-//
-//		// get hashmap of cluster
-//		ClusterDataReaderContorller cdrc = new ClusterDataReaderContorller(assetManager, PFs10R);
-//		HashMap<String, Integer> list = cdrc.readClusterDataBinary(pf_case);
-//		
-//		// create new cluster_list or delete clusters in the list
-//		if(cluster_list==null){
-//			cluster_list = new HashMap<Integer, Cluster>();
-//		}else{
-//			cluster_list.clear();
-//		}
-//			
-//		// create cluster objects
-//		
-//		
-//		
-//		ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
-//		HashMap<Coordinate, Integer> clusterlist = new HashMap<Coordinate, Integer>();
-//		
-//		// 
-//		for(Pair<Bus,Marker> p : buses.values()){			
-//			
-//			if(list.containsKey(p.first.getName())){
-//				//bus.setCircleColour(list.get(bus.getName()).second);
-//				p.first.setClusterNum(list.get(p.first.getName()));
-//				//Log.e("pc", "show the name "+list.get(bus.getName()));
-//				int cluster_num = p.first.getClusterNum();
-//				LatLng geo = p.first.getLatLng();
-//				Coordinate coord = new Coordinate(geo.latitude, geo.longitude);
-//				clusterlist.put(coord, cluster_num);
-//				coords.add(coord);
-//				
-//				//geo_list.put(coord, p.first.getName());
-//		
-//			}else{
-//				//bus.setCircleColour(0x00ffffff);
-//				p.first.setClusterNum(0);
-//			}
-//
-//		}
-//		
-//		// here progress bar start
-//		drawVoronoi(coords, clusterlist);
-//		// prgress bar end
-//		
-//	}
-
-
 
 	
 	
@@ -394,8 +275,7 @@ public class MainActivity extends  FragmentActivity{
 
     private void setUpDrawer(int cluster_num) {
     	
-    	if(clusterTypes!=null) clusterTypes.clear();
-    	else clusterTypes = new ArrayList<String>();
+    	ArrayList<String> clusterTypes = new ArrayList<String>();
     	
     	// array for drawer list
     	for(int i=1;i<=cluster_num;i++) clusterTypes.add("Cluster "+i);
@@ -448,8 +328,7 @@ public class MainActivity extends  FragmentActivity{
     	b_all.setOnClickListener(new View.OnClickListener() {			
 			@Override
 			public void onClick(View v) {
-				setAllClusters(true);
-				
+				setAllClusters(true);				
 			}
 		});
     	
@@ -492,8 +371,6 @@ public class MainActivity extends  FragmentActivity{
 			.zoom((float) 6.2)
 			.build();
 		  mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-
-	
 		  
 	}
 	
@@ -611,64 +488,6 @@ public class MainActivity extends  FragmentActivity{
 		
 		setUpDrawer(cluster_list.size());
     }
-    
-    
-    
-    // draw voronoi
-//    private void drawVoronoi(ArrayList<Coordinate> coords, Map<Coordinate, Integer> clusterlist){
-//    	
-// //   	if(poly_list==null) poly_list = new ArrayList<ArrayList<Polygon>>();
-//    	
-//    	// remove current voronoi
-//  		for(Cluster c : poly_list){  
-//  			for(Polygon p : ary)
-//  				p.remove(); 
-//  		}
-////    	poly_list.clear();
-////    	poly_list.add(new ArrayList<Polygon>()); // fake array 
-//    	
-//    	//// call only once 
-//    	GeometryFactory fact = new GeometryFactory();
-//	    VoronoiDiagramBuilder vdb = new VoronoiDiagramBuilder();
-//	    vdb.setSites(coords); // create voronoi
-//	    Geometry voronoi = vdb.getDiagram(fact); // geometory collections
-//	   ///
-//	    
-//	    //
-//	    Map<Integer, ArrayList<Geometry>> regions = new HashMap<Integer, ArrayList<Geometry>>();
-//	    
-//	    // clustering regions 
-//	    for(int i=0;i<voronoi.getNumGeometries();i++){ // loop all geometories
-//	    	Geometry geom = voronoi.getGeometryN(i); // each geometory
-//	    	// if bus has coordinate c_num = geom.getuserdata.name == name.bus.
-//	    	int cluster_num = clusterlist.get(geom.getUserData()); // key coordinate val cluster_num
-//	    	
-//			if(regions.containsKey(cluster_num)){ // num of cluster already made then add
-//				regions.get(cluster_num).add(geom);
-//			}else{ // otherwise make new 
-//				ArrayList<Geometry> cl = new ArrayList<Geometry>();
-//				cl.add(geom);
-//				regions.put(cluster_num, cl);
-//			}	    	
-//	    }
-//	    
-//	    // Border 
-//	    Geometry clip = clipper();
-//
-//	    // each regions union then paint 
-//	    for(Integer key : regions.keySet()){
-//	    	Geometry mpoly = new CascadedPolygonUnion(regions.get(key)).union();
-////	        Random rnd = new Random();
-////	    	int col = Color.argb(100,rnd.nextInt(256),rnd.nextInt(256),rnd.nextInt(256));
-//
-//	    	int col = Color.argb(100, colurs.get(key)[0], colurs.get(key)[1], colurs.get(key)[2]);
-//	    	ArrayList<Polygon> arraylist = drawpolygon(mpoly, clip, col);
-//	    	poly_list.add(arraylist);
-//	    }
-//	    Log.e("pc",regions.keySet().size()+" size of key");
-////	    Log.e("pc",poly_list.size()+" size of polylist");
-//	    	    
-//    }
     
     
     // clipping polygon
