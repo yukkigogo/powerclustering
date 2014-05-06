@@ -2,17 +2,20 @@ package com.example.powerclusteringvoronoi.model;
 
 import java.util.ArrayList;
 
+import android.util.Pair;
+
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polygon;
 
 public class Cluster {
 
-	ArrayList<String> names;
-	ArrayList<Polygon> polygon_list;
+	ArrayList<Bus> c_buses;
+	ArrayList<Pair<Bus,Integer>> fuzzy_bueses;
+	ArrayList<Polygon> polygon_list; // add all cluters includes different opcities 
 	int cluster_num;
 	
-	int opacity;
-	int colour;
+	boolean fuzzy=false;
+	int[] colour;
 	
 	double total_pf;
 	LatLng southest;
@@ -20,42 +23,60 @@ public class Cluster {
 	
 	
 	
-	public Cluster(int c_num, int o, int col) {
+	public Cluster(int c_num) {
 		this.cluster_num=c_num;
-		this.opacity=o;
-		this.colour=col;
-		names = new ArrayList<String>();
+		c_buses = new ArrayList<Bus>();
 		polygon_list = new ArrayList<Polygon>();
 	}
 
-	public int getColours(){
+	public Cluster(int c_num, boolean f){
+		this.fuzzy = f;
+		fuzzy_bueses = new ArrayList<Pair<Bus,Integer>>();
+	}
+	
+	
+
+	
+	public void setClusterColour(int[] col){
+		this.colour=col;
+	}
+	public int[] getClusterColour(){
 		return this.colour;
 	}
+	
 	
 	public int getClusterNum(){
 		return this.cluster_num;
 	}
 	
-	public int getOpacity(){
-		return this.opacity;
+	
+	public void addBus(Bus busname){
+		c_buses.add(busname);
+		if(southest!=null) compareSouth(busname.getLatLng());
+		else southest = busname.getLatLng();
+	}
+	public ArrayList<Bus> getBusList(){
+		return this.c_buses;
+	}
+
+	public void addFuzzyBus(Bus b, int opacity){
+		fuzzy_bueses.add(new Pair<Bus,Integer>(b,opacity));
+	}
+	public ArrayList<Pair<Bus,Integer>> getFuzzyBus(){
+		return this.fuzzy_bueses;
 	}
 	
-	public void addName(String busname){
-		names.add(busname);
-	}
-	public ArrayList<String> getNameList(){
-		return this.names;
-	}
 	
-	public void addPolygon(Polygon poly){
-		polygon_list.add(poly);
+	
+	public void addPolygon(ArrayList<Polygon> poly){
+		polygon_list = poly;
 	}
 	public ArrayList<Polygon> getPolygonList(){
 		return this.polygon_list;
 	}
 	
 	public int getTotalNode(){
-		return names.size();
+		return c_buses.size();
 	}
 
 	public void setTotalPF(double d){
@@ -78,5 +99,12 @@ public class Cluster {
 	public LatLng getWestest(){
 		return this.westest;
 	}
+	
+	private void compareSouth(LatLng l){
+		if(l.latitude<southest.latitude)
+			southest=l;
+	}
+	
+	
 	
 }

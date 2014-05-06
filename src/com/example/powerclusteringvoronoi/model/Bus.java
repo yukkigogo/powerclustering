@@ -1,8 +1,13 @@
 package com.example.powerclusteringvoronoi.model;
 
+import java.util.ArrayList;
+
+import android.util.Pair;
+
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.vividsolutions.jts.geom.Geometry;
 
 public class Bus {
 	
@@ -10,6 +15,8 @@ public class Bus {
 	private String name;
 	private int colour;
 	private int cluster_num;
+	private Geometry geom;
+	private ArrayList<Pair<Integer, Double>> clusters_list;
 	//private CircleOptions circleoption;
 
 	
@@ -18,6 +25,21 @@ public class Bus {
 		this.name=name;	
 		//circleoption = new CircleOptions();
 		
+	}
+	
+	public void setListClusters(Pair<Integer, Double> d){
+		if(clusters_list==null) clusters_list = new ArrayList<Pair<Integer,Double>>();
+		clusters_list.add(d);
+	}
+	public ArrayList<Pair<Integer, Double>> getListClusters(){
+		return this.clusters_list;
+	}
+	
+	public void setVoronoiGeo(Geometry g){
+		this.geom=g;
+	}
+	public Geometry getVoronoiGeo(){
+		return this.geom;
 	}
 	
 	public LatLng getLatLng(){return this.latlng;}
