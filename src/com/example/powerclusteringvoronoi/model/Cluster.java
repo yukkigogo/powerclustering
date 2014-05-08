@@ -1,17 +1,21 @@
 package com.example.powerclusteringvoronoi.model;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import android.util.Pair;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polygon;
+import com.vividsolutions.jts.geom.Geometry;
 
 public class Cluster {
 
 	ArrayList<Bus> c_buses;
-	ArrayList<Pair<Bus,Integer>> fuzzy_bueses;
+	//ArrayList<Pair<Bus,Integer>> fuzzy_bueses;
 	ArrayList<Polygon> polygon_list; // add all cluters includes different opcities 
+	HashMap<Integer, ArrayList<Geometry>> fuzzy_list;	
 	int cluster_num;
 	
 	boolean fuzzy=false;
@@ -31,7 +35,9 @@ public class Cluster {
 
 	public Cluster(int c_num, boolean f){
 		this.fuzzy = f;
-		fuzzy_bueses = new ArrayList<Pair<Bus,Integer>>();
+		//fuzzy_bueses = new ArrayList<Pair<Bus,Integer>>();
+		fuzzy_list = new HashMap<Integer, ArrayList<Geometry>>();
+		polygon_list = new ArrayList<Polygon>();
 	}
 	
 	
@@ -60,16 +66,18 @@ public class Cluster {
 	}
 
 	public void addFuzzyBus(Bus b, int opacity){
-		fuzzy_bueses.add(new Pair<Bus,Integer>(b,opacity));
+		if(!fuzzy_list.containsKey(opacity)) fuzzy_list.put(opacity, new ArrayList<Geometry>());
+		fuzzy_list.get(opacity).add(b.getVoronoiGeo());
 	}
-	public ArrayList<Pair<Bus,Integer>> getFuzzyBus(){
-		return this.fuzzy_bueses;
+	public HashMap<Integer,ArrayList<Geometry>> getFuzzyBus(){
+		return this.fuzzy_list;
 	}
 	
 	
 	
 	public void addPolygon(ArrayList<Polygon> poly){
-		polygon_list = poly;
+		for(Polygon p: poly)  polygon_list.add(p);
+
 	}
 	public ArrayList<Polygon> getPolygonList(){
 		return this.polygon_list;

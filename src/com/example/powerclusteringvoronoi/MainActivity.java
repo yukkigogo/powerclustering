@@ -125,17 +125,23 @@ public class MainActivity extends  FragmentActivity{
 	HashMap<Coordinate, String> geo_list;
 	
 	
+	private ClusterDataReaderContorller cdrc;
+	
 	// coastline for clipper 
 	String coast;
+	
+	
 	
 	// colour
 	ArrayList<int[]> colurs;
 	
+	ArrayList<String> PFs;
 	ArrayList<String> PFs10R;
-	ArrayList<Marker> bus_edge_marker_list;
-	ArrayList<ArrayList<Marker>> marker_list2;
+	//ArrayList<Marker> bus_edge_marker_list;
+	//ArrayList<ArrayList<Marker>> marker_list2;
 	
 	HashMap<Integer, Cluster> cluster_list;
+	boolean isFuzzy=false;
 	
 	//RadioButton 
 	RadioGroup radioGroup;
@@ -161,9 +167,11 @@ public class MainActivity extends  FragmentActivity{
 
 	   IDAdmittancePowerFlowsController controller2 = new IDAdmittancePowerFlowsController();
 	   //Ads = controller2.getNameFileToArray(ADs_CSV, assetManager);
-	   //PFs = controller2.getNameFileToArray(PFs_CSV, assetManager);
+	   PFs = controller2.getNameFileToArray(PFs_CSV, assetManager);
        PFs10R = controller2.getNameFileToArray(PFs_10CSV, assetManager);
 	   
+       cdrc = new ClusterDataReaderContorller(assetManager, PFs10R, PFs);
+       
        //create colour schame
        ColourSchameContorller csc = new ColourSchameContorller();
        colurs = csc.getColurSchameList(Colur_CSV, assetManager);
@@ -180,8 +188,8 @@ public class MainActivity extends  FragmentActivity{
         // obtain costline latlng string
         coast = controller.getCoastPairs(UKcoastline,assetManager);
 
-        drawCluster(0);
-            
+        //drawCluster(0);
+        drawFuzzyCluster(1);    
         
         //set radio button
         setRadios();
@@ -247,6 +255,18 @@ public class MainActivity extends  FragmentActivity{
 				drawCluster(9);
 				break;
 
+			case R.id.fuzzy1:
+				drawFuzzyCluster(1);
+				break;
+			case R.id.fuzzy2:
+				drawFuzzyCluster(2);
+				break;
+			case R.id.fuzzy3:
+				drawFuzzyCluster(3);
+				break;
+	
+				
+				
 			default:
 				break;
 			}
@@ -324,6 +344,7 @@ public class MainActivity extends  FragmentActivity{
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setHomeButtonEnabled(true); 
     	
+        
     	Button b_all = (Button) findViewById(R.id.drawer_all);
     	b_all.setOnClickListener(new View.OnClickListener() {			
 			@Override
@@ -340,7 +361,14 @@ public class MainActivity extends  FragmentActivity{
 			}
 		});
     	
-    	
+    	// delete button
+    	if(isFuzzy){
+    		b_all.setVisibility(View.GONE);
+    		b_clear.setVisibility(View.GONE);
+    	}else{
+    		b_all.setVisibility(View.VISIBLE);
+    		b_clear.setVisibility(View.VISIBLE);
+    	}
      
 	}
 
@@ -429,9 +457,7 @@ public class MainActivity extends  FragmentActivity{
 
     	// collect clusters and create cluster objects 	
     	// get data
-		ClusterDataReaderContorller cdrc = new ClusterDataReaderContorller(assetManager, PFs10R);
-		HashMap<String, Integer> list = cdrc.readClusterDataBinary(pf_case);
-		
+		HashMap<String, Integer> list = cdrc.readClusterDataBinary(pf_case);	
 		HashMap<String, Pair<Bus,Marker>> good_bus = new HashMap<String, Pair<Bus,Marker>>();
 		
 		// create new cluster_list or delete clusters in the list
@@ -444,7 +470,8 @@ public class MainActivity extends  FragmentActivity{
 	    	}
 			cluster_list.clear();
 		}
-    	
+    	isFuzzy=false;
+		
 		for(Pair<Bus, Marker> p:buses.values()){
 			Bus b = p.first;			
 			if(list.containsKey(b.getName())){
@@ -479,7 +506,7 @@ public class MainActivity extends  FragmentActivity{
 			Geometry mpoly = new CascadedPolygonUnion(l).union();
 			
 			cluster.setClusterColour(colurs.get(i));
-			int col = Color.argb(180, colurs.get(i)[0], colurs.get(i)[1], colurs.get(i)[2]);
+			int col = Color.argb(170, colurs.get(i)[0], colurs.get(i)[1], colurs.get(i)[2]);
 			
 			cluster.addPolygon(drawpolygon(mpoly, clip, col));
 			
@@ -489,6 +516,78 @@ public class MainActivity extends  FragmentActivity{
 		setUpDrawer(cluster_list.size());
     }
     
+    private void drawFuzzyCluster(int type){
+    	
+    	// data 
+    	ArrayList<HashMap<String, Double>> f_list = cdrc.readClusterDataFuzzy(type);
+    
+    	if(cluster_list==null){
+			cluster_list = new HashMap<Integer, Cluster>();
+		}else{
+	    	// detele previous clusters
+	    	for(Cluster c : cluster_list.values()){
+	    			for (Polygon p: c.getPolygonList()) p.remove();
+	    	}
+			cluster_list.clear();
+		}
+
+    	if(isFuzzy)
+    		for (Pair<Bus,Marker> p: buses.values()){ 
+    			if(p.first.getListClusters() !=null) 
+    				p.first.cleanListClusters();
+    		}
+    	isFuzzy=true;
+    	
+    	// select matching buses between PFs and coordinate
+    	HashMap<String, Pair<Bus,Marker>> good_bus = new HashMap<String, Pair<Bus,Marker>>();
+		for(String name: PFs) if(buses.containsKey(name)) good_bus.put(name, buses.get(name));
+    	buildVoronoiRegion(good_bus);
+    
+		
+		for(int i=0;i<f_list.size();i++){
+			HashMap<String, Double> ls = f_list.get(i);
+			int c_num = i+1;
+			Cluster cluster = new Cluster(c_num, true);	
+			cluster.setClusterColour(colurs.get(i));
+			for(String name : ls.keySet()){
+				if(buses.containsKey(name)){
+					Bus b = buses.get(name).first;
+					cluster.addFuzzyBus(b, getOpacitylevel(ls.get(name)));
+					b.setListClusters(new Pair<Integer,Double>(c_num , ls.get(name)));
+				}
+			}				
+			cluster_list.put(c_num, cluster);
+		}
+		
+		// draw cluster 1
+		drawFuzzyClusterPolygon(cluster_list.get(1));
+		// setup drawer but 
+		setUpDrawer(cluster_list.size());
+		for(int i=1;i<cluster_list.size();i++) mDrawerListView.setItemChecked(i, false);
+    }
+   
+    private void drawFuzzyClusterPolygon(Cluster cl){
+		// boarder
+		Geometry clip = clipper();
+
+    	for(Integer o_level : cl.getFuzzyBus().keySet()){	
+			Geometry mpoly = new CascadedPolygonUnion(cl.getFuzzyBus().get(o_level)).union();
+	
+			int col = Color.argb(o_level, cl.getClusterColour()[0], cl.getClusterColour()[1], cl.getClusterColour()[2]);
+			
+			cl.addPolygon(drawpolygon(mpoly, clip, col));
+			
+		}
+    }
+    
+    
+    private int getOpacitylevel(Double d){	
+    	if(d>0 && d<=0.25) return 51;
+    	else if(d>0.25 && d<=0.5) return 90;
+    	else if(d>0.5 && d<=0.75) return 128;
+    	else if(d>0.75 && d<1) return 166;
+    	else return 205;
+    }
     
     // clipping polygon
     private Geometry clipper(){
@@ -594,11 +693,31 @@ public class MainActivity extends  FragmentActivity{
 		private void selectItem(int position) {
 			int c_num = position +1;
 			
-			if(mDrawerListView.isItemChecked(position)){
-				for(Polygon p : cluster_list.get(c_num).getPolygonList()) p.setVisible(true);
-				
-			}else{
-				for(Polygon mk: cluster_list.get(c_num).getPolygonList()) mk.setVisible(false);
+			if(!isFuzzy){ // normal cluster
+				if(mDrawerListView.isItemChecked(position)){
+					
+					for(Polygon p : cluster_list.get(c_num).getPolygonList()) p.setVisible(true);
+					
+				}else{
+					
+					for(Polygon mk: cluster_list.get(c_num).getPolygonList()) mk.setVisible(false);
+				}
+			}else{  // Fuzzy 
+				if(mDrawerListView.isItemChecked(position)){
+					Log.v("pc", "show size "+cluster_list.get(c_num).getPolygonList().size());
+					if(cluster_list.get(c_num).getPolygonList().size()>0){
+						Log.v("pc", " polygon exist" + c_num);
+						for(Polygon p : cluster_list.get(c_num).getPolygonList()) p.setVisible(true);
+					}else{
+						Log.v("pc", " new polygon" + c_num);
+						drawFuzzyClusterPolygon(cluster_list.get(c_num));
+					}
+						
+						
+				}else{
+					Log.v("pc", "show size "+cluster_list.get(c_num).getPolygonList().size());
+					for(Polygon p : cluster_list.get(c_num).getPolygonList()) p.setVisible(false); 
+				}
 			}
 			
 			//mDrawerLayout.closeDrawer(mDrawerLinearLayout);

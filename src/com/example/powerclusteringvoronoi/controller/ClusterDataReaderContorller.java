@@ -8,15 +8,18 @@ import java.util.HashMap;
 
 import android.content.res.AssetManager;
 import android.util.Log;
+import android.util.Pair;
 
 public class ClusterDataReaderContorller {
 
 	AssetManager assetManager;
 	ArrayList<String> PFs10R;
+	ArrayList<String> PFs;
 	
-	public ClusterDataReaderContorller(AssetManager as, ArrayList<String> l) {
+	public ClusterDataReaderContorller(AssetManager as, ArrayList<String>pfs10, ArrayList<String> pf) {
 		this.assetManager = as;
-		this.PFs10R = l;
+		this.PFs10R = pfs10;
+		this.PFs = pf;
 	}
 	
 	public HashMap<String,Integer> readClusterDataBinary(int i){
@@ -92,6 +95,50 @@ public class ClusterDataReaderContorller {
 	}
 	
 	// readClsuterDataFuzzy 
-	
+	public ArrayList<HashMap<String,Double>> readClusterDataFuzzy(int i){
+		
+		ArrayList<HashMap<String, Double>> list_fuzzy = 
+				new ArrayList<HashMap<String, Double>>();
+		
+		String fileList="";
+		switch (i){
+		case 1:
+			fileList ="fuzzy1.csv";  // pf
+			break;
+		case 2:
+			fileList ="fuzzy2.csv";  // pf
+			break;
+		case 3:
+			fileList ="fuzzy3.csv";  // pf
+			break;
+		}
+		
+		try {			
+			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(fileList)));
+			String str;
+			
+			int c_num=1;
+			while ((str = br.readLine()) !=null) {
+				String[] s = str.split(",");
+				HashMap<String, Double> l = new HashMap<String, Double>();
+				for(int j=0; j<s.length ; j++){
+					String name = PFs.get(j+1);
+					double opacity = Double.parseDouble(s[j]);
+					
+					if(opacity>0)
+					 l.put(name, opacity);
+					
+				}
+				list_fuzzy.add(l);
+ 				c_num++;
+			}
+			
+		}catch (IOException e) {
+			String s = e.getMessage();
+			Log.e("pc", s);
+		}
+		
+		return list_fuzzy;
+	}
 	
 }

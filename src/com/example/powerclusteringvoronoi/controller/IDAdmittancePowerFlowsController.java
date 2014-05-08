@@ -12,7 +12,7 @@ public class IDAdmittancePowerFlowsController {
 
 	public ArrayList<String> getNameFileToArray(String filename, AssetManager assetManager){
 		ArrayList<String> list = new ArrayList<String>();
-		list.add("");
+		list.add(""); // filled 0 index
 
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(filename)));

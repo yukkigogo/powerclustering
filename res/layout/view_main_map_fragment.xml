@@ -26,7 +26,6 @@
 	        <RadioButton
 	          android:id="@+id/radio_case1"
 	          android:textColor="@color/white"
-	          android:checked="true"
 	          android:text="Case1 22 "/>
 	        <RadioButton
 	          android:id="@+id/radio_case2"
@@ -66,6 +65,22 @@
 	          android:textColor="@color/white"
 	          android:text="Case10 30 "/>
 
+           <RadioButton
+	          android:id="@+id/fuzzy1"
+	          android:textColor="@color/white"
+	          android:checked="true"
+	          android:text="Fuzzy 1 "/>
+	        	        
+           <RadioButton
+	          android:id="@+id/fuzzy2"
+	          android:textColor="@color/white"
+	          android:text="Fuzzy 2 "/>
+ 
+           <RadioButton
+	          android:id="@+id/fuzzy3"
+	          android:textColor="@color/white"
+	          android:text="Fuzzy 3 "/>
+           
         </RadioGroup> 
 	    
 	</LinearLayout>

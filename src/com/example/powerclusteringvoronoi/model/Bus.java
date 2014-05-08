@@ -34,6 +34,9 @@ public class Bus {
 	public ArrayList<Pair<Integer, Double>> getListClusters(){
 		return this.clusters_list;
 	}
+	public void cleanListClusters(){
+		clusters_list.clear();
+	}
 	
 	public void setVoronoiGeo(Geometry g){
 		this.geom=g;
