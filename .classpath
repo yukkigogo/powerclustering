@@ -12,5 +12,7 @@
 	<classpathentry kind="lib" path="/Users/yukki/Documents/workspace/jts-1.13/lib/jdom.jar"/>
 	<classpathentry kind="lib" path="/Users/yukki/Documents/workspace/jts-1.13/lib/junit.jar"/>
 	<classpathentry kind="lib" path="/Users/yukki/Documents/workspace/jts-1.13/lib/xerces.jar"/>
+	<classpathentry kind="lib" path="/Users/yukki/Downloads/commons-math3-3.2/commons-math3-3.2.jar"/>
+	<classpathentry kind="lib" path="/Users/yukki/Downloads/commons-lang3-3.3.2/commons-lang3-3.3.2.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

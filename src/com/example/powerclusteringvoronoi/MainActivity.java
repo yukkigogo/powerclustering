@@ -6,11 +6,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import org.apache.http.message.BufferedHeader;
 import org.json.JSONException;
@@ -85,6 +87,11 @@ import android.widget.Toast;
 
 
 
+
+
+
+
+
 //JTS imports
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -100,6 +107,11 @@ import com.vividsolutions.jts.triangulate.VoronoiDiagramBuilder;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.math3.stat.descriptive.rank.Median;
+
+
 
 public class MainActivity extends  FragmentActivity{
 	
@@ -546,13 +558,26 @@ public class MainActivity extends  FragmentActivity{
 		
 		for(int i=0;i<f_list.size();i++){
 			HashMap<String, Double> ls = f_list.get(i);
+			
+			// median, u
+			Median median = new Median();
+			
+			Double[] pri = (Double[]) ls.values().toArray();
+			double[] list = ArrayUtils.toPrimitive(pri);
+
+			
+			double l_quartile = median.evaluate(list , 25.0);
+			double med = median.evaluate(list , 50.0);
+			double u_quartile = median.evaluate(list , 75.0);
+			
 			int c_num = i+1;
 			Cluster cluster = new Cluster(c_num, true);	
 			cluster.setClusterColour(colurs.get(i));
 			for(String name : ls.keySet()){
 				if(buses.containsKey(name)){
 					Bus b = buses.get(name).first;
-					cluster.addFuzzyBus(b, getOpacitylevel(ls.get(name)));
+					cluster.addFuzzyBus(b, getOpacitylevel(ls.get(name)), ls.get(name));
+					
 					b.setListClusters(new Pair<Integer,Double>(c_num , ls.get(name)));
 				}
 			}				
@@ -573,11 +598,34 @@ public class MainActivity extends  FragmentActivity{
     	for(Integer o_level : cl.getFuzzyBus().keySet()){	
 			Geometry mpoly = new CascadedPolygonUnion(cl.getFuzzyBus().get(o_level)).union();
 	
-			int col = Color.argb(o_level, cl.getClusterColour()[0], cl.getClusterColour()[1], cl.getClusterColour()[2]);
+			//int col = Color.argb(o_level, cl.getClusterColour()[0], cl.getClusterColour()[1], cl.getClusterColour()[2]);
 			
+			List<Integer> c = getHeatCol(o_level);
+			int col = Color.argb(128, c.get(0), c.get(1), c.get(2));
+				
 			cl.addPolygon(drawpolygon(mpoly, clip, col));
 			
 		}
+    }
+    
+    private List<Integer> getHeatCol(int col){
+    	
+    	switch (col) {
+		case 51:
+			return Arrays.asList(170,246,11);
+		case 90:
+			return Arrays.asList(224,188,0);
+		case 128:
+			return Arrays.asList(244,140,0);
+		case 166:
+			return Arrays.asList(253,102,0);
+		case 205:
+			return Arrays.asList(255,55,0);	
+		default:
+			return null;
+		}
+		
+    	
     }
     
     
