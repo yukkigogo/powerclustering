@@ -560,15 +560,19 @@ public class MainActivity extends  FragmentActivity{
 			HashMap<String, Double> ls = f_list.get(i);
 			
 			// median, u
-			Median median = new Median();
+			ArrayList<Double> pripri = new ArrayList<Double>();
+			for(double d: ls.values()){
+				if(d!=1) pripri.add(d);
+			}
 			
-			Double[] pri = (Double[]) ls.values().toArray();
+			Median median = new Median();			
+			Double[] pri = (Double[]) pripri.toArray();
 			double[] list = ArrayUtils.toPrimitive(pri);
 
-			
 			double l_quartile = median.evaluate(list , 25.0);
 			double med = median.evaluate(list , 50.0);
 			double u_quartile = median.evaluate(list , 75.0);
+			
 			
 			int c_num = i+1;
 			Cluster cluster = new Cluster(c_num, true);	
@@ -576,8 +580,9 @@ public class MainActivity extends  FragmentActivity{
 			for(String name : ls.keySet()){
 				if(buses.containsKey(name)){
 					Bus b = buses.get(name).first;
-					cluster.addFuzzyBus(b, getOpacitylevel(ls.get(name)), ls.get(name));
-					
+					//cluster.addFuzzyBus(b, getOpacitylevel(ls.get(name)), ls.get(name));
+					cluster.addFuzzyBus(b, convertOpacityVal(ls.get(name), l_quartile,
+							med, u_quartile), ls.get(name));
 					b.setListClusters(new Pair<Integer,Double>(c_num , ls.get(name)));
 				}
 			}				
@@ -628,6 +633,16 @@ public class MainActivity extends  FragmentActivity{
     	
     }
     
+    
+    private int convertOpacityVal(double d, double l, double m, double u){
+    	if(d>0 && d<=l) return 51;
+    	else if(d>l && d<=m) return 90;
+    	else if(d>m && d<=u) return 128;
+    	else if(d>u && d<1) return 166;
+    	else return 205;
+    	
+    	
+    }
     
     private int getOpacitylevel(Double d){	
     	if(d>0 && d<=0.25) return 51;
