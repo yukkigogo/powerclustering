@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.http.message.BufferedHeader;
 import org.json.JSONException;
 
@@ -39,6 +41,7 @@ import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.Polygon;
+import com.google.common.primitives.Doubles;
 
 import android.R.color;
 import android.R.integer;
@@ -77,21 +80,6 @@ import android.widget.Toast;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //JTS imports
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -108,8 +96,6 @@ import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.math3.stat.descriptive.rank.Median;
 
 
 
@@ -565,13 +551,19 @@ public class MainActivity extends  FragmentActivity{
 				if(d!=1) pripri.add(d);
 			}
 			
-			Median median = new Median();			
-			Double[] pri = (Double[]) pripri.toArray();
-			double[] list = ArrayUtils.toPrimitive(pri);
-
-			double l_quartile = median.evaluate(list , 25.0);
-			double med = median.evaluate(list , 50.0);
-			double u_quartile = median.evaluate(list , 75.0);
+			
+			double l_quartile = 0.25;
+			double med = 0.5;
+			double u_quartile = 0.25;
+			
+			if(pripri.size()>0){
+				Median median = new Median();			
+				
+				double[] list = Doubles.toArray(pripri);
+				l_quartile = median.evaluate(list , 25.0);
+				med = median.evaluate(list , 50.0);
+				u_quartile = median.evaluate(list , 75.0);
+			}
 			
 			
 			int c_num = i+1;
@@ -580,6 +572,7 @@ public class MainActivity extends  FragmentActivity{
 			for(String name : ls.keySet()){
 				if(buses.containsKey(name)){
 					Bus b = buses.get(name).first;
+					
 					//cluster.addFuzzyBus(b, getOpacitylevel(ls.get(name)), ls.get(name));
 					cluster.addFuzzyBus(b, convertOpacityVal(ls.get(name), l_quartile,
 							med, u_quartile), ls.get(name));
@@ -601,14 +594,21 @@ public class MainActivity extends  FragmentActivity{
 		Geometry clip = clipper();
 
     	for(Integer o_level : cl.getFuzzyBus().keySet()){	
-			Geometry mpoly = new CascadedPolygonUnion(cl.getFuzzyBus().get(o_level)).union();
-	
+			//Geometry mpoly = new CascadedPolygonUnion(cl.getFuzzyBus().get(o_level)).union();
+    	
 			//int col = Color.argb(o_level, cl.getClusterColour()[0], cl.getClusterColour()[1], cl.getClusterColour()[2]);
+			//int col = Color.argb(o_level, 141,0,211);
 			
-			List<Integer> c = getHeatCol(o_level);
-			int col = Color.argb(128, c.get(0), c.get(1), c.get(2));
-				
-			cl.addPolygon(drawpolygon(mpoly, clip, col));
+			
+    		List<Integer> c = getHeatCol(o_level);
+			int col = Color.argb(150, c.get(0), c.get(1), c.get(2));
+			
+			
+			//cl.addPolygon(drawpolygon(mpoly, clip, col));
+			
+			for(Geometry mpoly : cl.getFuzzyBus().get(o_level)){
+				cl.addPolygon(drawpolygon(mpoly, clip, col));
+			}
 			
 		}
     }
@@ -625,7 +625,7 @@ public class MainActivity extends  FragmentActivity{
 		case 166:
 			return Arrays.asList(253,102,0);
 		case 205:
-			return Arrays.asList(255,55,0);	
+			return Arrays.asList(255,3,0);	
 		default:
 			return null;
 		}
