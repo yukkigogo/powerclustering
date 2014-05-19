@@ -28,6 +28,7 @@ import com.example.powerclusteringvoronoi.model.Cluster;
 import com.example.powerclusteringvoronoi.model.Edge;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -80,6 +81,7 @@ import android.widget.Toast;
 
 
 
+
 //JTS imports
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -99,7 +101,7 @@ import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 
 
 
-public class MainActivity extends  FragmentActivity{
+public class MainActivity extends  FragmentActivity implements OnMapLongClickListener{
 	
 	//system variable
 	AssetManager assetManager;
@@ -186,8 +188,8 @@ public class MainActivity extends  FragmentActivity{
         // obtain costline latlng string
         coast = controller.getCoastPairs(UKcoastline,assetManager);
 
-        //drawCluster(0);
-        drawFuzzyCluster(1);    
+        drawCluster(0);
+        //drawFuzzyCluster(1);    
         
         //set radio button
         setRadios();
@@ -199,6 +201,7 @@ public class MainActivity extends  FragmentActivity{
 
 		for (int c : cluster_list.keySet()){
 	    		mDrawerListView.setItemChecked(c-1, b);
+	    		cluster_list.get(c).setVisiblity(b);
 	    		for(Polygon p : cluster_list.get(c).getPolygonList()) p.setVisible(b);
 	    	}	
 
@@ -398,7 +401,12 @@ public class MainActivity extends  FragmentActivity{
 			.build();
 		  mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 		  
+		  //setup Longclick
+		  mMap.setOnMapLongClickListener(this);
+		  
 	}
+	
+	
 	
 
 	@Override
@@ -506,7 +514,7 @@ public class MainActivity extends  FragmentActivity{
 			cluster.setClusterColour(colurs.get(i));
 			int col = Color.argb(170, colurs.get(i)[0], colurs.get(i)[1], colurs.get(i)[2]);
 			
-			cluster.addPolygon(drawpolygon(mpoly, clip, col));
+			cluster.addPolygon(drawpolygon(mpoly, clip, col, cluster));
 			
 			i++;
 		}
@@ -607,7 +615,7 @@ public class MainActivity extends  FragmentActivity{
 			//cl.addPolygon(drawpolygon(mpoly, clip, col));
 			
 			for(Geometry mpoly : cl.getFuzzyBus().get(o_level)){
-				cl.addPolygon(drawpolygon(mpoly, clip, col));
+				cl.addPolygon(drawpolygon(mpoly, clip, col, cl));
 			}
 			
 		}
@@ -669,7 +677,7 @@ public class MainActivity extends  FragmentActivity{
         return(clip);
     }
     // draw multi-polygon component wisely,  return an array of polygons. 
-    private ArrayList<Polygon> drawpolygon(Geometry mpoly, Geometry clipper, int col) {
+    private ArrayList<Polygon> drawpolygon(Geometry mpoly, Geometry clipper, int col, Cluster cl) {
     	
     	ArrayList<Polygon> arraylist = new ArrayList<Polygon>();	
         	
@@ -677,6 +685,9 @@ public class MainActivity extends  FragmentActivity{
 	    	Geometry geom = mpoly.getGeometryN(j);
 	    	if(!clipper.contains(geom)){
 	    		geom = geom.intersection(clipper);
+	    		cl.addGeoList(geom);
+	    	}else{
+	    		cl.addGeoList(geom);
 	    	}	    	
 	    	
 	    	// polygon options 
@@ -758,11 +769,11 @@ public class MainActivity extends  FragmentActivity{
 			
 			if(!isFuzzy){ // normal cluster
 				if(mDrawerListView.isItemChecked(position)){
-					
+					cluster_list.get(c_num).setVisiblity(true);
 					for(Polygon p : cluster_list.get(c_num).getPolygonList()) p.setVisible(true);
 					
 				}else{
-					
+					cluster_list.get(c_num).setVisiblity(false);
 					for(Polygon mk: cluster_list.get(c_num).getPolygonList()) mk.setVisible(false);
 				}
 			}else{  // Fuzzy 
@@ -779,6 +790,7 @@ public class MainActivity extends  FragmentActivity{
 						
 				}else{
 					Log.v("pc", "show size "+cluster_list.get(c_num).getPolygonList().size());
+					cluster_list.get(c_num).setVisiblity(false);
 					for(Polygon p : cluster_list.get(c_num).getPolygonList()) p.setVisible(false); 
 				}
 			}
@@ -788,5 +800,39 @@ public class MainActivity extends  FragmentActivity{
 		}
 	
     }
+
+
+	@Override
+	public void onMapLongClick(LatLng point) {
+		
+		// show cluster information 
+		if(!isFuzzy){
+			for(Cluster cl: cluster_list.values()){
+				GeometryFactory factory = new GeometryFactory();
+				Point po = factory.createPoint(new Coordinate(point.latitude, point.longitude));
+				Log.e("pc", cl.getGeoList().size()+ "cluster size");
+
+				outerloop:
+				for(Geometry geo : cl.getGeoList()){
+					if(po.intersects(geo)){ 			
+						if(cl.getVisiblity()){
+							
+//							ClusterDialog clusterDialog = new ClusterDialog(cl);
+//							clusterDialog.show(getSupportFragmentManager(), "pc");
+							
+							Toast.makeText(this, 
+								" Cluster number " + cl.getClusterNum() + "\n Total Number of Cluster " + cl.getBusList().size(),
+								Toast.LENGTH_SHORT).show();
+						}
+						Log.v("pc",point.latitude +" and "+ point.longitude + "cluster num" + cl.getClusterNum());
+						break outerloop;
+					}else{
+						Log.v("pc", "without cluster" + cl.getClusterNum());
+					}
+				}
+			}
+		
+		}
+	}
 	
 }

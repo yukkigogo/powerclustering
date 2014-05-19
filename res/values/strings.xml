@@ -19,5 +19,9 @@
     <string name="drawer_close">Close navigation drawer</string>
     
      <color name="white">#FFFFFF</color>
+     <color name="half_gray">#CC505050 </color>   
+    <color name="half_blue_s">#CC34d7fb </color>
+    <color name="half_blue_e">#CC0097bb </color>
+    
      
 </resources>
