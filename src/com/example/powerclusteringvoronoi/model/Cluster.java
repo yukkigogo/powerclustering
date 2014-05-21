@@ -11,7 +11,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polygon;
 import com.vividsolutions.jts.geom.Geometry;
 
-public class Cluster {
+public class Cluster implements Comparable{
 
 	ArrayList<Bus> c_buses;
 	//ArrayList<Pair<Bus,Integer>> fuzzy_bueses;
@@ -23,9 +23,9 @@ public class Cluster {
 	boolean fuzzy=false;
 	int[] colour;
 	
-	double total_pf;
+	double total_pf=0.0;
 	LatLng southest;
-	LatLng westest;
+	//LatLng westest;
 	
 	double median;
 	double u_quartile;
@@ -67,7 +67,9 @@ public class Cluster {
 		return this.colour;
 	}
 	
-	
+	public void setClusterNum(int i){
+		this.cluster_num=i;
+	}
 	public int getClusterNum(){
 		return this.cluster_num;
 	}
@@ -117,31 +119,30 @@ public class Cluster {
 		return c_buses.size();
 	}
 
-	public void setTotalPF(double d){
-		this.total_pf=d;
+	public void addTotalPF(double d){
+		this.total_pf=this.total_pf+d;
 	}
 	public double getTotalPF(){
 		return this.total_pf;
 	}
 	
-	public void setSouthest(LatLng s){
-		this.southest=s;
-	}
+
 	public LatLng getSouthest(){
 		return this.southest;
 	}
-	
-	public void setWestest(LatLng w){
-		this.westest=w;
-	}
-	public LatLng getWestest(){
-		return this.westest;
-	}
-	
 	private void compareSouth(LatLng l){
 		if(l.latitude<southest.latitude)
 			southest=l;
 	}
+
+	@Override
+	public int compareTo(Object another) {
+		if(this.southest.latitude > ((Cluster) another).southest.latitude) return 1;
+		else if (this.southest.latitude < ((Cluster) another).southest.latitude ) return -1;
+		else return 0;
+	
+	}
+	
 	
 	
 	

@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -77,6 +79,8 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+
 
 
 
@@ -464,6 +468,7 @@ public class MainActivity extends  FragmentActivity implements OnMapLongClickLis
     	// collect clusters and create cluster objects 	
     	// get data
 		HashMap<String, Integer> list = cdrc.readClusterDataBinary(pf_case);	
+		HashMap<String,Double> totalpf = cdrc.readTotalPF(pf_case);
 		HashMap<String, Pair<Bus,Marker>> good_bus = new HashMap<String, Pair<Bus,Marker>>();
 		
 		// create new cluster_list or delete clusters in the list
@@ -485,11 +490,14 @@ public class MainActivity extends  FragmentActivity implements OnMapLongClickLis
 				if(!cluster_list.containsKey(c_num)){
 					Cluster cluster = new Cluster(c_num);
 					cluster.addBus(b);
+					cluster.addTotalPF(totalpf.get(b.getName()));
 					cluster_list.put(c_num, cluster);
+					cluster.addTotalPF(totalpf.get(b.getName()));
 					p.second.setSnippet("Cluster Number"+ c_num);
 				}else{
 					Cluster cluster = cluster_list.get(c_num);
 					cluster.addBus(b);
+					cluster.addTotalPF(totalpf.get(b.getName()));
 					p.second.setSnippet("Cluster Number"+ c_num);
 				}				
 				good_bus.put(b.getName(), p);
@@ -500,7 +508,7 @@ public class MainActivity extends  FragmentActivity implements OnMapLongClickLis
 		}
 		buildVoronoiRegion(good_bus);
 
-		
+		cluster_list = fixClusterOrder(cluster_list);
 		
 	    // Border 
 	    Geometry clip = clipper();
@@ -641,6 +649,22 @@ public class MainActivity extends  FragmentActivity implements OnMapLongClickLis
     	
     }
     
+    
+    private HashMap<Integer,Cluster> fixClusterOrder(HashMap<Integer,Cluster> list){
+    	ArrayList<Cluster> clist = new ArrayList<Cluster>();
+    	for(Cluster c : list.values()){
+    		clist.add(c);
+    	}
+    	Collections.sort(clist);
+    	list.clear(); 	
+    	for(int i=0;i<clist.size();i++){
+    		Cluster c = clist.get(i);
+    		int c_num = i+1;
+    		c.setClusterNum(c_num);
+    		list.put(c_num, c);		
+    	}
+    	return list;
+    }
     
     private int convertOpacityVal(double d, double l, double m, double u){
     	if(d>0 && d<=l) return 51;
@@ -817,12 +841,11 @@ public class MainActivity extends  FragmentActivity implements OnMapLongClickLis
 					if(po.intersects(geo)){ 			
 						if(cl.getVisiblity()){
 							
+							
+							
 //							ClusterDialog clusterDialog = new ClusterDialog(cl);
 //							clusterDialog.show(getSupportFragmentManager(), "pc");
 							
-							Toast.makeText(this, 
-								" Cluster number " + cl.getClusterNum() + "\n Total Number of Cluster " + cl.getBusList().size(),
-								Toast.LENGTH_SHORT).show();
 						}
 						Log.v("pc",point.latitude +" and "+ point.longitude + "cluster num" + cl.getClusterNum());
 						break outerloop;

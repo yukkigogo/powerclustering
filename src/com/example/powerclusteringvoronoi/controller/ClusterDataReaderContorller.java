@@ -32,6 +32,7 @@ public class ClusterDataReaderContorller {
 
 		
 		String fileList="";
+		
 		switch (i){
 		case 0:
 			fileList ="pf_10_01.csv";  // pf
@@ -71,6 +72,7 @@ public class ClusterDataReaderContorller {
 
 		case 9:
 			fileList ="pf_10_10.csv";
+
 			break;
 		
 		}		
@@ -97,6 +99,81 @@ public class ClusterDataReaderContorller {
 		
 		return list;
 	}
+	
+	public HashMap<String,Double> readTotalPF(int num){
+		
+		HashMap<String, Double> list = new HashMap<String, Double>();
+		
+		String pfdata="";
+
+		switch (num){
+		case 0:
+			pfdata = "totalPF01.csv";
+			break;
+
+		case 1:
+			pfdata = "totalPF02.csv";
+			break;
+
+		case 2:
+			pfdata = "totalPF03.csv";
+			break;
+
+		case 3:
+			pfdata = "totalPF04.csv";
+			break;
+
+		case 4:
+			pfdata = "totalPF05.csv";
+			break;
+
+		case 5:
+			pfdata = "totalPF06.csv";
+			break;
+
+		case 6:
+			pfdata = "totalPF07.csv";
+			break;
+
+		case 7:
+			pfdata = "totalPF08.csv";
+			break;
+
+		case 8:
+			pfdata = "totalPF09.csv";
+			break;
+
+		case 9:
+			pfdata = "totalPF10.csv";
+
+			break;
+		
+		}		
+		
+	
+		try {			
+			BufferedReader br = new BufferedReader(new InputStreamReader(assetManager.open(pfdata)));
+			String str;
+			int count=1;
+			while ((str = br.readLine()) !=null) {
+				String name;						
+				name =PFs10R.get(count);
+				
+				double val = Double.parseDouble(str);
+				//int col = colours.get(cluster_num);
+				
+ 				list.put(name, val);
+ 				count++;
+			}
+		}catch (IOException e) {
+			String s = e.getMessage();
+			Log.e("pc", s);
+		}
+		return list;
+	
+	}
+
+	
 	
 	// readClsuterDataFuzzy 
 	public ArrayList<HashMap<String,Double>> readClusterDataFuzzy(int i){
@@ -144,6 +221,8 @@ public class ClusterDataReaderContorller {
 		
 		return list_fuzzy;
 	}
+	
+	
 	
 	
 	

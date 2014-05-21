@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 public class ClusterDialog extends DialogFragment {
 
@@ -39,6 +40,15 @@ public class ClusterDialog extends DialogFragment {
 	
 	private void setInterface(View view) {
 		
+		TextView clustertitle = (TextView) view.findViewById(R.id.cluster_num);
+		clustertitle.setText("Cluster No : "+ cluster.getClusterNum());
+		
+		TextView totalnum = (TextView) view.findViewById(R.id.total_num);
+		totalnum.setText("Total Number of Clusters : "+ cluster.getTotalNode());
+
+		TextView totalpf = (TextView) view.findViewById(R.id.total_pf);
+		totalpf.setText("Total Power Flow : "+ cluster.getTotalPF());
+
 		
 		// cancel button
 		ImageView closebtn = (ImageView) view.findViewById(R.id.closebtn);
