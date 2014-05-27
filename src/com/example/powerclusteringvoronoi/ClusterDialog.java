@@ -11,6 +11,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -34,6 +35,7 @@ public class ClusterDialog extends DialogFragment {
 		
 		Dialog dialog = builder.create();
 		dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+		
 		return dialog;
 		
 	}
@@ -44,10 +46,12 @@ public class ClusterDialog extends DialogFragment {
 		clustertitle.setText("Cluster No : "+ cluster.getClusterNum());
 		
 		TextView totalnum = (TextView) view.findViewById(R.id.total_num);
-		totalnum.setText("Total Number of Clusters : "+ cluster.getTotalNode());
+		totalnum.setText("Total Number of Clusters : "+ cluster.getTotalNode()+" buses");
 
 		TextView totalpf = (TextView) view.findViewById(R.id.total_pf);
-		totalpf.setText("Total Power Flow : "+ cluster.getTotalPF());
+		int val = (int) cluster.getTotalPF();
+		
+		totalpf.setText("Total Power Flow : "+ val +" MW");
 
 		
 		// cancel button

@@ -30,6 +30,7 @@ import com.example.powerclusteringvoronoi.model.Cluster;
 import com.example.powerclusteringvoronoi.model.Edge;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter;
 import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.UiSettings;
@@ -79,6 +80,8 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+
 
 
 
@@ -198,8 +201,11 @@ public class MainActivity extends  FragmentActivity implements OnMapLongClickLis
         //set radio button
         setRadios();
         
+        //set infowindow
+        mMap.setInfoWindowAdapter(new MyInfoWindowAdapter());
         
-    }
+        
+	}
 
 	private void setAllClusters(boolean b){
 
@@ -465,6 +471,13 @@ public class MainActivity extends  FragmentActivity implements OnMapLongClickLis
     
     private void drawCluster(int pf_case){
 
+        MainActivity.this.runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(MainActivity.this, "Reading Cluster Information", Toast.LENGTH_SHORT).show();
+            }
+        });
+    
+    	
     	// collect clusters and create cluster objects 	
     	// get data
 		HashMap<String, Integer> list = cdrc.readClusterDataBinary(pf_case);	
@@ -493,12 +506,12 @@ public class MainActivity extends  FragmentActivity implements OnMapLongClickLis
 					cluster.addTotalPF(totalpf.get(b.getName()));
 					cluster_list.put(c_num, cluster);
 					cluster.addTotalPF(totalpf.get(b.getName()));
-					p.second.setSnippet("Cluster Number"+ c_num);
+					p.second.setSnippet( c_num + ", "+totalpf.get(b.getName()));
 				}else{
 					Cluster cluster = cluster_list.get(c_num);
 					cluster.addBus(b);
 					cluster.addTotalPF(totalpf.get(b.getName()));
-					p.second.setSnippet("Cluster Number"+ c_num);
+					p.second.setSnippet( c_num +", "+ totalpf.get(b.getName()));
 				}				
 				good_bus.put(b.getName(), p);
 			}else{
@@ -840,13 +853,16 @@ public class MainActivity extends  FragmentActivity implements OnMapLongClickLis
 				for(Geometry geo : cl.getGeoList()){
 					if(po.intersects(geo)){ 			
 						if(cl.getVisiblity()){
-							
-							
-							
-//							ClusterDialog clusterDialog = new ClusterDialog(cl);
-//							clusterDialog.show(getSupportFragmentManager(), "pc");
-							
-						}
+			
+//							BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.x1);							
+//							Marker marker = mMap.addMarker(new MarkerOptions().position(point).icon(icon).title("Cluster Information").snippet("values...."));
+//							marker.showInfoWindow();
+			
+								ClusterDialog clusterDialog = new ClusterDialog(cl);
+								clusterDialog.show(getSupportFragmentManager(), "pc");
+								
+						}	
+						
 						Log.v("pc",point.latitude +" and "+ point.longitude + "cluster num" + cl.getClusterNum());
 						break outerloop;
 					}else{
@@ -857,5 +873,36 @@ public class MainActivity extends  FragmentActivity implements OnMapLongClickLis
 		
 		}
 	}
+	
+	
+	private class MyInfoWindowAdapter implements InfoWindowAdapter{
+
+		
+		private final View mview;
+		
+		public MyInfoWindowAdapter() {
+			mview = getLayoutInflater().inflate(R.layout.c_infowindow, null);
+		}
+		
+		@Override
+		public View getInfoContents(Marker marker) {
+			TextView title = (TextView) mview.findViewById(R.id.iw_title);
+			title.setText(marker.getTitle());
+			
+			String[] params = marker.getSnippet().split(",");
+			TextView c_num = (TextView) mview.findViewById(R.id.iw_clnum);
+			c_num.setText("Cluster No : "+ params[0]);
+			TextView pf = (TextView) mview.findViewById(R.id.iw_pf);
+			pf.setText("Power Flow : "+params[1]+" MW");
+			return mview;
+		}
+
+		@Override
+		public View getInfoWindow(Marker marker) {
+			return null;
+		}
+		
+	}
+	
 	
 }
