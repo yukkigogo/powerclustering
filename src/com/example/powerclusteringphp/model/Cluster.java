@@ -1,4 +1,4 @@
-package com.example.powerclusteringvoronoi.model;
+package com.example.powerclusteringphp.model;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;

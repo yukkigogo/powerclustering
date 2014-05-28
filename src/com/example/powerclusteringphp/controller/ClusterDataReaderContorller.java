@@ -1,4 +1,4 @@
-package com.example.powerclusteringvoronoi.controller;
+package com.example.powerclusteringphp.controller;
 
 
 

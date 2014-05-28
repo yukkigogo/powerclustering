@@ -1,6 +1,6 @@
-package com.example.powerclusteringvoronoi;
+package com.example.powerclusteringphp;
 
-import com.example.powerclusteringvoronoi.model.Cluster;
+import com.example.powerclusteringphp.model.Cluster;
 
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;

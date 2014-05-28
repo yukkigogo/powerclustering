@@ -1,4 +1,4 @@
-package com.example.powerclusteringvoronoi;
+package com.example.powerclusteringphp;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,19 +15,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.http.message.BufferedHeader;
 import org.json.JSONException;
 
-import com.example.powerclusteringvoronoi.controller.BusesEdgeInitialController;
-import com.example.powerclusteringvoronoi.controller.ClusterDataReaderContorller;
-import com.example.powerclusteringvoronoi.controller.ColourSchameContorller;
-import com.example.powerclusteringvoronoi.controller.IDAdmittancePowerFlowsController;
-import com.example.powerclusteringvoronoi.model.Bus;
-import com.example.powerclusteringvoronoi.model.Cluster;
-import com.example.powerclusteringvoronoi.model.Edge;
+import com.example.powerclusteringphp.controller.BusesEdgeInitialController;
+import com.example.powerclusteringphp.controller.ClusterDataReaderAsyncTaskContorller;
+import com.example.powerclusteringphp.controller.ClusterDataReaderContorller;
+import com.example.powerclusteringphp.controller.ColourSchameContorller;
+import com.example.powerclusteringphp.controller.IDAdmittancePowerFlowsController;
+import com.example.powerclusteringphp.controller.PowerFlowReaderAsyncTaskContorller;
+import com.example.powerclusteringphp.model.Bus;
+import com.example.powerclusteringphp.model.Cluster;
+import com.example.powerclusteringphp.model.Edge;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter;
@@ -80,6 +83,12 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+
+
+
+
+
 
 
 
@@ -227,43 +236,43 @@ public class MainActivity extends  FragmentActivity implements OnMapLongClickLis
 			radioButton = (RadioButton) findViewById(checkedId);
 			switch (checkedId) {
 			case R.id.radio_case1:
-				drawCluster(0);								
+				drawCluster(1);								
 				break;
 
 			case R.id.radio_case2:
-				drawCluster(1);
-				break;
-
-			case R.id.radio_case3:
 				drawCluster(2);
 				break;
 
-			case R.id.radio_case4:
+			case R.id.radio_case3:
 				drawCluster(3);
+				break;
+
+			case R.id.radio_case4:
+				drawCluster(4);
 				break;
 				
 			case R.id.radio_case5:
-				drawCluster(4);
-				break;
-
-			case R.id.radio_case6:
 				drawCluster(5);
 				break;
 
-			case R.id.radio_case7:
+			case R.id.radio_case6:
 				drawCluster(6);
 				break;
 
-			case R.id.radio_case8:
+			case R.id.radio_case7:
 				drawCluster(7);
 				break;
 
-			case R.id.radio_case9:
+			case R.id.radio_case8:
 				drawCluster(8);
 				break;
 
-			case R.id.radio_case10:
+			case R.id.radio_case9:
 				drawCluster(9);
+				break;
+
+			case R.id.radio_case10:
+				drawCluster(10);
 				break;
 
 			case R.id.fuzzy1:
@@ -471,17 +480,26 @@ public class MainActivity extends  FragmentActivity implements OnMapLongClickLis
     
     private void drawCluster(int pf_case){
 
-        MainActivity.this.runOnUiThread(new Runnable() {
-            public void run() {
-                Toast.makeText(MainActivity.this, "Reading Cluster Information", Toast.LENGTH_SHORT).show();
-            }
-        });
     
     	
     	// collect clusters and create cluster objects 	
     	// get data
-		HashMap<String, Integer> list = cdrc.readClusterDataBinary(pf_case);	
-		HashMap<String,Double> totalpf = cdrc.readTotalPF(pf_case);
+    	
+    	ClusterDataReaderAsyncTaskContorller task = new ClusterDataReaderAsyncTaskContorller(this, PFs10R);
+		HashMap<String, Integer> list=null;
+		PowerFlowReaderAsyncTaskContorller taskpf = new PowerFlowReaderAsyncTaskContorller(this, PFs10R);	
+		HashMap<String,Double> totalpf=null;
+		try {
+			list = task.execute(pf_case).get();
+			totalpf = taskpf.execute(pf_case).get();
+
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+		
+		
 		HashMap<String, Pair<Bus,Marker>> good_bus = new HashMap<String, Pair<Bus,Marker>>();
 		
 		// create new cluster_list or delete clusters in the list
@@ -904,5 +922,6 @@ public class MainActivity extends  FragmentActivity implements OnMapLongClickLis
 		
 	}
 	
+
 	
 }
